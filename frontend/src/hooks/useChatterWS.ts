@@ -1,49 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
-
+import { useState, useCallback } from 'react';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 const useChatterWS = (path: string) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [messages, setMessages] = useState<any[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
 
-  const lastMessage = messages[messages.length - 1];
-  useEffect(() => {
-    const ws = new WebSocket(`${import.meta.env.VITE_BACKEND_URL}/${path}`);
-    console.log(`${import.meta.env.VITE_BACKEND_URL}/${path}`);
-
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      setIsConnected(true);
-    };
-
-    ws.onmessage = (event) => {
+  const { sendMessage, lastMessage, readyState } = useWebSocket(`${import.meta.env.VITE_BACKEND_URL}/${path}`, {
+    onOpen: () => console.log('WebSocket connected'),
+    onClose: () => console.log('WebSocket disconnected'),
+    onMessage: (event) => {
       const data = JSON.parse(event.data);
       setMessages((prevMessages) => [...prevMessages, data]);
-    };
+    },
+    shouldReconnect: () => true,
+  });
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      setIsConnected(false);
-    };
+  const isConnected = readyState === ReadyState.OPEN;
 
-    setSocket(ws);
-
-    return () => {
-      ws.close();
-    };
-  }, [path]);
-
-  const sendMessage = useCallback((message: string) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ message }));
-    }
-    else {
+  const sendMessageCallback = useCallback((message: string) => {
+    if (isConnected) {
+      sendMessage(message);
+    } else {
       console.error('WebSocket is not connected');
     }
-  }, [socket]);
+  }, [sendMessage, isConnected]);
 
-  return { messages, lastMessage, sendMessage, isConnected };
+  return { messages, lastMessage, sendMessage: sendMessageCallback, isConnected };
 };
 
 export default useChatterWS;

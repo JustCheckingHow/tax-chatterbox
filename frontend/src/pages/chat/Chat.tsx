@@ -5,29 +5,54 @@ import useChatterWS from '../../hooks/useChatterWS';
 
 interface Message {
   message: string;
-  sender: 'user' | 'ai';
+  sender: 'user' | 'ai' | 'system';
 }
 
-const Message: React.FC<Message> = ({ message, sender }) => (
-  <ListItem alignItems="flex-start">
-    <ListItemText
-      primary={sender === 'user' ? 'Ty' : 'AI'}
-      secondary={message}
-      sx={{ textAlign: sender === 'user' ? 'right' : 'left' }}
-    />
-  </ListItem>
-);
+const Message: React.FC<Message> = ({ message, sender }) => {
+  let senderName = 'AI';
+  if (sender === 'user') {
+    senderName = 'Ty';
+  }
+  else if (sender === 'system') {
+    senderName = '';
+  }
+  let alignment = "left";
+  if (sender === 'user') {
+    alignment = "right";
+  }
+
+  return (
+    <ListItem alignItems="flex-start">
+      <ListItemText
+        primary={senderName}
+        secondary={message}
+        sx={{ textAlign: alignment }}
+      />
+    </ListItem>
+  )
+}
 
 const Chat: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([{ message: "Witaj! Jak mogę Ci pomóc?", sender: 'ai' }]);
   const [newestMessage, setNewestMessage] = useState<Message | null>(null);
+  const [requiredInfo, setRequiredInfo] = useState<{ [key: string]: string }>({
+    "Imię": "",
+    "Nazwisko": "",
+    "Adres": "",
+    "PESEL": "",
+    "Numer telefonu": "",
+    "Email": "",
+    "Rodzaj dochodu": "",
+    "Wysokość dochodu": "",
+    "Wysokość podatku": "",
+  });
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      sendMessage(JSON.stringify({ command: 'basicFlow', text: input }));
+      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
@@ -37,12 +62,21 @@ const Chat: React.FC = () => {
 
   React.useEffect(() => {
     if (lastMessage) {
-      if (lastMessage.command === 'basicFlowComplete') {
-        setMessages(m => [...m, { message: lastMessage.message, sender: 'ai' }]);
+      const lastMessageData = JSON.parse(lastMessage.data);
+      console.log(lastMessageData);
+      if (lastMessageData.command === 'basicFlowComplete') {
+        setMessages(m => [...m, { message: lastMessageData.message, sender: 'ai' }]);
         setNewestMessage(null);
       }
-      else if (lastMessage.command === 'basicFlowPartial') {
-        setNewestMessage({ message: lastMessage.message, sender: 'ai' });
+      else if (lastMessageData.command === 'basicFlowPartial') {
+        setNewestMessage({ message: lastMessageData.message, sender: 'ai' });
+      }
+      else if (lastMessageData.command === 'informationParsed') {
+        const newestInfo = lastMessageData.message as Record<string, string>;
+        const nonEmpty = Object.fromEntries(Object.entries(newestInfo).filter(([, v]) => v.trim() !== ''));
+        const msg = `Nowe informacje. ${Object.entries(nonEmpty).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
+        setRequiredInfo(info => ({ ...info, ...nonEmpty }));
+        setMessages(m => [...m, { message: msg, sender: 'system' }]);
       }
     }
   }, [lastMessage]);
@@ -57,7 +91,7 @@ const Chat: React.FC = () => {
           {messages.map((message, index) => (
             <React.Fragment key={index}>
               <Message {...message} />
-              <Divider variant="inset" component="li" />
+              {message.sender !== "system" && <Divider variant="inset" component="li" />}
             </React.Fragment>
           ))}
           {newestMessage && <Message {...newestMessage} />}
@@ -69,6 +103,12 @@ const Chat: React.FC = () => {
             placeholder="Wpisz swoją wiadomość..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
           />
           <Button
             variant="contained"
