@@ -4,6 +4,7 @@ import Nav from '../components/Nav/Nav';
 import Footer from "../components/Footer/Footer.tsx";
 import Chat from "../components/Chat/Chat.tsx";
 
+
 const Main: React.FC = () => {
 
 
