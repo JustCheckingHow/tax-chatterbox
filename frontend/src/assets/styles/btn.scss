@@ -1,0 +1,264 @@
+.btn {
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  -webkit-user-select: none;
+  user-select: none;
+  text-decoration: none;
+  border: 0.125rem solid #0052a5;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  height: 2.75rem;
+  padding: 0;
+}
+.btn span:only-child {
+  margin: 1.875rem;
+}
+.btn span:first-child {
+  margin-left: 1.875rem;
+}
+.btn span:last-child {
+  margin-right: 1.875rem;
+}
+.btn svg {
+  height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.btn svg:first-child {
+  margin-right: 0.5rem;
+  margin-left: 1.875rem;
+}
+.btn svg:last-child {
+  margin-left: 0.5rem;
+  margin-right: 1.875rem;
+}
+.btn svg:only-child {
+  margin: 0;
+}
+.btn:focus, .btn[state-focus] {
+  box-shadow: 0 0 3px 0.2rem rgba(0, 82, 165, 0.5);
+}
+.btn-primary {
+  color: #fff;
+  border-color: #0052a5;
+  background-color: #0052a5;
+}
+.btn-primary:hover, .btn-primary[state-hover] {
+  color: #fff;
+  border-color: #006cd7;
+  background-color: #006cd7;
+}
+.btn-primary:disabled {
+  color: #fff;
+  background-color: #656565;
+  border-color: #656565;
+  cursor: not-allowed;
+}
+.btn-primary svg {
+  display: inline-block;
+  width: 22px;
+}
+.btn-primary svg {
+  fill: #fff;
+}
+.btn-primary:focus, .btn-primary[state-focus] {
+  box-shadow: 0 0 3px 0.2rem rgba(0, 82, 165, 0.5);
+}
+.btn-secondary {
+  color: #0052a5;
+  border-color: #0052a5;
+  background-color: #fff;
+}
+.btn-secondary:hover, .btn-secondary[state-hover] {
+  color: #006cd7;
+  border-color: #006cd7;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.btn-secondary:disabled {
+  color: #656565;
+  background-color: #f1f1f1;
+  border-color: #656565;
+  cursor: not-allowed;
+}
+.btn-secondary svg {
+  display: inline-block;
+  width: 22px;
+}
+.btn-secondary svg {
+  fill: #0052a5;
+}
+.btn-secondary:hover, .btn-secondary[state-hover] {
+  border-color: #006cd7;
+  color: #006cd7;
+}
+.btn-secondary:hover svg, .btn-secondary[state-hover] svg {
+  fill: #006cd7;
+}
+.btn-secondary:disabled svg {
+  fill: #656565;
+}
+.btn-tertiary {
+  color: #0052a5;
+  border-color: transparent;
+  background-color: transparent;
+}
+.btn-tertiary:hover, .btn-tertiary[state-hover] {
+  color: #006cd7;
+  border-color: transparent;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.btn-tertiary:disabled {
+  color: #656565;
+  background-color: #fff;
+  border-color: transparent;
+  cursor: not-allowed;
+}
+.btn-tertiary svg {
+  display: inline-block;
+  width: 22px;
+}
+.btn-tertiary svg {
+  fill: #0052a5;
+}
+.btn-tertiary:hover, .btn-tertiary[state-hover] {
+  background-color: transparent;
+}
+.btn-tertiary:hover svg, .btn-tertiary[state-hover] svg {
+  fill: #006cd7;
+}
+.btn-tertiary:disabled svg {
+  fill: #656565;
+}
+.btn-white {
+  color: #fff;
+  border-color: #fff;
+  background-color: transparent;
+}
+.btn-white:hover, .btn-white[state-hover] {
+  color: #fff;
+  border-color: #fff;
+  background-color: #006cd7;
+}
+.btn-white:disabled {
+  color: #656565;
+  background-color: #f1f1f1;
+  border-color: #656565;
+  cursor: not-allowed;
+}
+.btn-white svg {
+  display: inline-block;
+  width: 22px;
+}
+.btn-white svg {
+  fill: #0052a5;
+}
+.btn-red {
+  color: #fff;
+  border-color: #a7162d;
+  background-color: #a7162d;
+}
+.btn-red:hover, .btn-red[state-hover] {
+  color: #d5233f;
+  border-color: #d5233f;
+  background-color: #d5233f;
+}
+.btn-red:disabled {
+  color: initial;
+  background-color: initial;
+  border-color: initial;
+  cursor: not-allowed;
+}
+.btn-red svg {
+  display: inline-block;
+  width: 22px;
+}
+.btn-red svg {
+  fill: #fff;
+}
+.btn-red:hover, .btn-red[state-hover] {
+  color: #fff;
+  text-decoration: none;
+  background-color: #d5233f;
+  border-color: #d5233f;
+}
+.btn-red:hover svg, .btn-red[state-hover] svg {
+  fill: #fff;
+}
+.btn-red-secondary {
+  color: #a7162d;
+  border-color: #a7162d;
+  background-color: transparent;
+}
+.btn-red-secondary:hover, .btn-red-secondary[state-hover] {
+  color: #d5233f;
+  border-color: #d5233f;
+  background-color: #d5233f;
+}
+.btn-red-secondary:disabled {
+  color: initial;
+  background-color: initial;
+  border-color: initial;
+  cursor: not-allowed;
+}
+.btn-red-secondary svg {
+  display: inline-block;
+  width: 22px;
+}
+.btn-red-secondary svg {
+  fill: #a7162d;
+}
+.btn-red-secondary:hover, .btn-red-secondary[state-hover] {
+  color: #d5233f;
+  text-decoration: none;
+  border-color: #d5233f;
+  background-color: transparent;
+}
+.btn-red-secondary:hover svg, .btn-red-secondary[state-hover] svg {
+  fill: #d5233f;
+}
+.btn-wide {
+  width: 17em;
+}
+[class*=background-color] .btn:focus, [class*=background-color] .btn[state-focus] {
+  box-shadow: 0 0 3px 0.2rem rgba(255, 255, 255, 0.5);
+}
+[class*=background-color] .btn-primary {
+  background-color: #fff;
+  border-color: #fff;
+  color: #0052a5;
+}
+[class*=background-color] .btn-primary svg {
+  fill: #0052a5;
+}
+[class*=background-color] .btn-primary:hover, [class*=background-color] .btn-primary[state-hover] {
+  color: #006cd7;
+}
+[class*=background-color] .btn-primary:hover svg, [class*=background-color] .btn-primary[state-hover] svg {
+  fill: #006cd7;
+}
+[class*=background-color] .btn-secondary {
+  border-color: #fff;
+  color: #fff;
+  background-color: transparent;
+}
+[class*=background-color] .btn-secondary svg {
+  fill: #fff;
+}
+[class*=background-color] .btn-secondary:hover, [class*=background-color] .btn-secondary[state-hover] {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+[class*=background-color] .btn-tertiary {
+  color: #fff;
+}
+[class*=background-color] .btn-tertiary svg {
+  fill: #fff;
+}
+[class*=background-color] .btn-tertiary:hover, [class*=background-color] .btn-tertiary[state-hover] {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+fieldset:disabled a.btn {
+  pointer-events: none;
+}

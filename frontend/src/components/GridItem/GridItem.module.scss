@@ -1,0 +1,31 @@
+.gridItem{
+  &__wrapper{
+    border: .125rem solid #fafafa;;
+    padding: 12px;
+    transition: .3s;
+    &:hover{
+      border-color: #0052a5;
+      cursor: pointer;
+    }
+  }
+  &__icon{
+    img{
+      height: 56px;
+      width: auto;
+    }
+  }
+  &__header{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    span{
+      color: #0052a5;
+      font-weight: 600;
+      line-height: 1.3;
+      font-size: 1.125em;
+    }
+  }
+  &__content{
+
+  }
+}
