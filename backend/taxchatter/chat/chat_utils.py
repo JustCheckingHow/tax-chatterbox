@@ -1,4 +1,5 @@
 import json
+import os
 
 import httpx
 from bs4 import BeautifulSoup
@@ -11,6 +12,8 @@ from .llm_prompts.bielik import RULES
 
 async def _get_ai_response(messages, callback=None):
     client = AsyncOpenAI(
+        base_url="https://gaiuslexopenaisponsored.openai.azure.com/openai/deployments/gpt-4o",
+        api_key=os.environ["AZURE_API_KEY"],
         # base_url=os.environ["RUNPOD_BIELIK_URL"] + "/v1",
         # api_key=os.environ["RUNPOD_API_KEY"],
     )
@@ -62,18 +65,21 @@ async def parse_info(message, history, required_info) -> dict:
         "Odpowiadaj tylko i wyłącznie po polsku."
     )
 
+    history_str = (
+        "Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: ```{msg['content']}```" for msg in history])
+        + ". \n"
+    )
+
+    logger.info(f"History: {history_str}")
+
     user = (
         "Oto informacje, które są potrzebne do wypełnienia wniosku: "
         + str(list(required_info.keys()))
         + ". Nie pytaj o nic więcej. "
         "Z wypowiedzi użytkownika wyciągnij podane informacje i wypisz je w formacie JSON. Odpowiadaj tylko i wyłącznie po polsku. "  # noqa: E501
         'Odpowiedz tylko w formacie JSON: {"nazwa_informacji": "wartość", "nazwa_informacji2": "wartość2"}. Jeżeli user nie podał żadnych informacji, zwróć pusty słownik: {}. \n'  # noqa: E501
-        "Oto historia rozmowy: \n"
-        + str("\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]))
-        + "\n- user: "
-        + message
-        + "\n"
-        "Wyciągnij informacje z całej rozmowy."
+        f"{history_str}\n" + "Wyciągnij informacje z całej rozmowy."
     )
 
     res = await _get_ai_response(

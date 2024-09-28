@@ -17,9 +17,9 @@ class AIConsumer(AsyncWebsocketConsumer):
         messages_parsed = []
         for msg in messages:
             if msg["sender"] == "user":
-                messages_parsed.append({"role": "user", "content": msg["message"]})
+                messages_parsed.append({"role": "user", "content": msg["message"].replace("\n", " ")})
             elif msg["sender"] == "ai":
-                messages_parsed.append({"role": "assistant", "content": msg["message"]})
+                messages_parsed.append({"role": "assistant", "content": msg["message"].replace("\n", " ")})
         return messages_parsed
 
     async def send_on_the_fly(self, method, message, history, command, final_command, required_info=None):

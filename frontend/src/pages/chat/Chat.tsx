@@ -10,7 +10,7 @@ import ChatDocUploader from "../../components/ChatDocUploader/ChatDocUploader.ts
 
 import signIcon from "../../assets/icons/sign.svg";
 // import chatIcon from "../../assets/icons/czatbot.svg";
-import voiceIcon  from "../../assets/icons/callcenter.svg";
+import voiceIcon from "../../assets/icons/callcenter.svg";
 
 import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
@@ -41,7 +41,7 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
       </div>
       <div className={styles.chat__message__author}>
         {senderName === 'AI' && <img src={logo} alt="logo" />}
-      </div> 
+      </div>
     </li>
   )
 }
@@ -111,77 +111,84 @@ const Chat: React.FC = () => {
   }, [lastMessage]);
 
   return (
-    <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column"}}>
-    <Nav/>
-    <div className="container" style={{paddingTop: "2em", paddingBottom: "2em", flex: 1}}>
-    <div className={styles.chat__container}>
-    {messages.length < 2 && (view != "uploadDoc" ? (
-                <div
-                    className={styles.chat__grid}
-                >
-                    {/* <GridItem
+    <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
+      <Nav />
+      <div className="container" style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
+        <div className={styles.chat__container}>
+          {messages.length < 2 && (view != "uploadDoc" ? (
+            <div
+              className={styles.chat__grid}
+            >
+              {/* <GridItem
                     onClick={() => {}}
                         icon={chatIcon}
                         heading={"Opisz swoją sprawę"}
                         content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
                     /> */}
-                    <GridItem
-                        onClick={() => {setView("uploadDoc")}}
-                        icon={signIcon}
-                        heading={"Prześlij umowę"}
-                        content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
-                    />
-                    <GridItem
-                    onClick={() => {}}
-                        icon={voiceIcon}
-                        heading={"Porozmawiaj z asystentem"}
-                        content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
-                    />
-                </div>
-            ) : <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <ChatDocUploader sendMessage={
-                  (message: string) => {
-                    setMessages(m => [...m, { message: message, sender: 'user', hidden: true }]);
-                    setInput(message);
-                    handleSendMessage();
-                  }
-                }/>
-                <p onClick={() => {setView('')}}>Wróć</p>
-              </div>)}
-        <ul className={styles.chat__message__container}>
-          {messages.map((message, index) => (
-            <React.Fragment key={index}>
-              <Message {...message} />
-            </React.Fragment>
-          ))}
-          {newestMessage && <Message {...newestMessage} />}
-        </ul>
-        <form className={styles.chat__form}>
-          <input
-            className={styles.chat__input}
-            placeholder="Wpisz swoją wiadomość..."
-            value={input}
-            type='text'
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSendMessage();
+              <GridItem
+                onClick={() => { setView("uploadDoc") }}
+                icon={signIcon}
+                heading={"Prześlij umowę"}
+                content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
+              />
+              <GridItem
+                onClick={() => { }}
+                icon={voiceIcon}
+                heading={"Porozmawiaj z asystentem"}
+                content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
+              />
+            </div>
+          ) : <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <ChatDocUploader sendMessage={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (message: any) => {
+                const msg = {
+                  command: 'basicFlow',
+                  text: message.text.replaceAll("\n", " "),
+                  required_info: requiredInfo,
+                  history: messages,
+                  is_necessary: isNecessary
+                };
+                setMessages(m => [...m, { message: message.text, sender: 'user', hidden: true }]);
+                sendMessage(JSON.stringify(msg));
               }
-            }} />
-        <button type={"button"} className={"btn btn-secondary"}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M192 0C139 0 96 43 96 96l0 160c0 53 43 96 96 96s96-43 96-96l0-160c0-53-43-96-96-96zM64 216c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 89.1 66.2 162.7 152 174.4l0 33.6-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l72 0 72 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-33.6c85.8-11.7 152-85.3 152-174.4l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 70.7-57.3 128-128 128s-128-57.3-128-128l0-40z"/></svg>
-          </button>
-          <button className={"btn btn-primary"} onClick={handleSendMessage} type='button'>
-            <span>Wyślij</span>
-          </button>
-        </form>
+            } />
+            <p onClick={() => { setView('') }}>Wróć</p>
+          </div>)}
+          <ul className={styles.chat__message__container}>
+            {messages.map((message, index) => (
+              <React.Fragment key={index}>
+                <Message {...message} />
+              </React.Fragment>
+            ))}
+            {newestMessage && <Message {...newestMessage} />}
+          </ul>
+          <form className={styles.chat__form}>
+            <input
+              className={styles.chat__input}
+              placeholder="Wpisz swoją wiadomość..."
+              value={input}
+              type='text'
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }} />
+            <button type={"button"} className={"btn btn-secondary"}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M192 0C139 0 96 43 96 96l0 160c0 53 43 96 96 96s96-43 96-96l0-160c0-53-43-96-96-96zM64 216c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 89.1 66.2 162.7 152 174.4l0 33.6-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l72 0 72 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-33.6c85.8-11.7 152-85.3 152-174.4l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 70.7-57.3 128-128 128s-128-57.3-128-128l0-40z" /></svg>
+            </button>
+            <button className={"btn btn-primary"} onClick={handleSendMessage} type='button'>
+              <span>Wyślij</span>
+            </button>
+          </form>
+        </div>
+        <Checklist required_info={requiredInfo} />
       </div>
-      <Checklist required_info={requiredInfo} />
-      </div>
-    <Footer/>
+      <Footer />
     </Box>
-  );  
+  );
 };
 
 export default Chat;
