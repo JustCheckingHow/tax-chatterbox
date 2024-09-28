@@ -14,6 +14,8 @@ import voiceIcon  from "../../assets/icons/callcenter.svg";
 
 import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
+import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
+import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
 
 interface Message {
   message: string;
@@ -167,6 +169,8 @@ const Chat: React.FC = () => {
         </form>
       </div>
       <Checklist required_info={requiredInfo} />
+      <GovermentSelect />
+      <FinalDocument />
       </div>
     <Footer/>
     </Box>
