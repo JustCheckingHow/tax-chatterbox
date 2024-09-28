@@ -1,16 +1,13 @@
 .gov-file-uploader {
   max-width: 35.375rem;
 }
-.gov-file-uploader .gov-file-uploader__header > h3 {
-  font-size: 0.875rem;
-  font-weight: normal;
-}
 .gov-file-uploader .gov-file-uploader__input {
   position: relative;
   border: 1px solid #b7b7b7;
   border-radius: 0.1875rem;
   text-align: center;
   padding: 1.5rem;
+  margin-top: 12px;
 }
 .gov-file-uploader .gov-file-uploader__input [type=file] {
   opacity: 0;
