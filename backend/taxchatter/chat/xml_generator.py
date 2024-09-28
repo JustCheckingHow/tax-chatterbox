@@ -482,7 +482,11 @@ class PCC3_6_Schema:
         return self.P_62
 
 
-def validate_json(json_data):
+# class SDZ2_6_Schema:
+# def __init__(self, P4):
+
+
+def validate_json_pcc3(json_data):
     # person data:
     osoba_fizyczna = OsobaFizyczna(
         pesel=json_data.get("Pesel"),
@@ -534,18 +538,55 @@ def validate_json(json_data):
     return out
 
 
-def parse_validate_acceptance(acceptance):
-    try:
-        acceptance = int(acceptance)
-    except ValueError:
-        raise ValueError("Data must be accepted")  # noqa: B904
+# def validate_json_sdz2(json_data):
+#     out = {}
 
-    return acceptance
+#     osoba_fizyczna1 = OsobaFizyczna(
+#         pesel=json_data.get("Pesel"),
+#         imie=json_data.get("Imie"),
+#         nazwisko=json_data.get("Nazwisko"),
+#         imie_ojca=json_data.get("ImieOjca"),
+#         imie_matki=json_data.get("ImieMatki"),
+#     ).parse_validate()
+
+#     adres_zamieszkania1 = AdresZamieszkania(
+#         kod_kraju=json_data.get("KodKraju"),
+#         wojewodztwo=json_data.get("Wojewodztwo"),
+#         powiat=json_data.get("Powiat"),
+#         gmina=json_data.get("Gmina"),
+#         miejscowosc=json_data.get("Miejscowosc"),
+#         ulica=json_data.get("Ulica"),
+#         nr_domu=json_data.get("NrDomu"),
+#         nr_lokalu=json_data.get("NrLokalu"),
+#         kod_pocztowy=json_data.get("KodPocztowy"),
+#     ).parse_validate()
+
+#     osoba_fizyczna2 = OsobaFizyczna(
+#         pesel=json_data.get("Pesel2"),
+#         imie=json_data.get("Imie2"),
+#         nazwisko=json_data.get("Nazwisko2"),
+#         imie_ojca=json_data.get("ImieOjca2"),
+#         imie_matki=json_data.get("ImieMatki2"),
+#     ).parse_validate()
+
+#     adres_zamieszkania2 = AdresZamieszkania(
+#         kod_kraju=json_data.get("KodKraju2"),
+#         wojewodztwo=json_data.get("Wojewodztwo2"),
+#         powiat=json_data.get("Powiat2"),
+#         gmina=json_data.get("Gmina2"),
+#         miejscowosc=json_data.get("Miejscowosc2"),
+#         ulica=json_data.get("Ulica2"),
+#         nr_domu=json_data.get("NrDomu2"),
+#         nr_lokalu=json_data.get("NrLokalu2"),
+#         kod_pocztowy=json_data.get("KodPocztowy2"),
+#     ).parse_validate()
+
+# sdz_schema = SDZ2_6_Schema(
 
 
 def generate_xml(json_schema):
     try:
-        parsed_json = validate_json(json_schema)
+        parsed_json = validate_json_pcc3(json_schema)
     except ValueError as e:
         print(e)
         return
