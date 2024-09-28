@@ -5,8 +5,6 @@ services:
     build: ./backend
     ports:
       - "8001:8000"
-    volumes:
-      - ./backend:/app
     environment:
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
@@ -15,11 +13,5 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
-
-volumes:
-  node_modules:
