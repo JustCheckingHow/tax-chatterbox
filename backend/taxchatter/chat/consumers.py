@@ -36,6 +36,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         logger.info(f"AI response: {answer}")
         # Remove unchanged values
         answer = {k: v for k, v in answer.items() if str(v).strip() != str(required_info[k]).strip()}
+        required_info.update(answer)
         await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
 
         # Check whether the form is even necessary
