@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import styles from "./ChatDocUploader.module.scss"
 
-const ChatDocUploader = ({sendMessage}: {sendMessage: (message: string) => void}) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ChatDocUploader = ({sendMessage}: {sendMessage: (message: any) => void}) => {
     const [files, setFiles] = useState<File[]>([]);
     const [progress, setProgress] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -37,15 +38,15 @@ const ChatDocUploader = ({sendMessage}: {sendMessage: (message: string) => void}
 
             if (response.ok) {
                 console.log('Files uploaded');
-                let data = await response.json();
+                const data = await response.json();
                 if (data.responses && Array.isArray(data.responses)) {
-                    const message = JSON.stringify({
+                    const message = {
                         command: 'basicFlow',
                         text: data.responses.join(' '),
                         required_info: {},
                         history: [],
                         is_necessary: "unknown"
-                    });
+                    };
                     sendMessage(message);
                 }
                 setProgress(100);
