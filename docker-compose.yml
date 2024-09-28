@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
@@ -17,6 +17,9 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
+
+volumes:
+  node_modules:
