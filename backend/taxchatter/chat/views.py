@@ -1,9 +1,11 @@
+import os
 import tempfile
 
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.response import Response
+from rest_framework.response import HttpResponse, Response
 from rest_framework.views import APIView
+from xml_generator import generate_xml, required_fields, validate_user_data
 
 from .llm_prompts.qwen import ocr_pdf
 
@@ -36,3 +38,37 @@ class FileUploadView(APIView):
             return Response({"message": "File uploaded successfully", "responses": responses})
 
         return Response({"message": "File uploaded successfully"}, status=status.HTTP_200_OK)
+
+
+class XmlSchemaView(APIView):
+    def get(self, request):
+        return Response({"message": required_fields}, status=status.HTTP_200_OK)
+
+
+class ValidateUserDataView(APIView):
+    def post(self, request):
+        data = request.data
+        try:
+            validate_user_data(data)
+            return Response({"message": "User data validated successfully", "data": data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GenerateXmlView(APIView):
+    # allow user to download generated file
+
+    def post(self, request):
+        data = request.data
+        try:
+            # Generate XML using the data
+            temp_file_name = generate_xml(data)
+
+            with open(temp_file_name) as f:
+                response = HttpResponse(f.read(), content_type="application/xml")
+                response["Content-Disposition"] = 'attachment; filename="deklaracja.xml"'
+                os.remove(temp_file_name)
+                return response
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)

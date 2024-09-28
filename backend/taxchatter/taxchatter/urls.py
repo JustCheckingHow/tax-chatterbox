@@ -24,4 +24,7 @@ urlpatterns = [
     path("chat", chat_views.chat_page, name="chat"),
     path("api/chat", chat_views.ChatAPIView.as_view(), name="chat_api"),
     path("api/upload", chat_views.FileUploadView.as_view(), name="upload"),
+    path("api/xml_schema", chat_views.XmlSchemaView.as_view(), name="xml_schema"),
+    path("api/validate_user_data", chat_views.ValidateUserDataView.as_view(), name="validate_user_data"),
+    path("api/generate_xml", chat_views.GenerateXmlView.as_view(), name="generate_xml"),
 ]
