@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 const Main: React.FC = () => {
   return (
-    <Box sx={{ height: '100vh', width: "100%", display: "flex", flexDirection: "column"}}>
+    <Box sx={{ minHeight: '100vh', width: "100%", display: "flex", flexDirection: "column"}}>
       <Nav/>
         <div className="container" style={{paddingTop: "2em", paddingBottom: "2em", flex: 1}}>
             {/* <Chat/> */}

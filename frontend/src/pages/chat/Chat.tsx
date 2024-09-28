@@ -13,6 +13,7 @@ import signIcon from "../../assets/icons/sign.svg";
 import voiceIcon  from "../../assets/icons/callcenter.svg";
 
 import logo from "../../assets/image/logo.png"
+import Checklist from "../../components/Checklist/Checklist.tsx"
 
 interface Message {
   message: string;
@@ -133,7 +134,7 @@ const Chat: React.FC = () => {
                     />
                 </div>
             ) : <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <ChatDocUploader/>
+                <ChatDocUploader sendMessage={sendMessage}/>
                 <p onClick={() => {setView('')}}>Wróć</p>
               </div>)}
         <ul className={styles.chat__message__container}>
@@ -165,10 +166,11 @@ const Chat: React.FC = () => {
           </button>
         </form>
       </div>
-    </div>
+      <Checklist required_info={requiredInfo} />
+      </div>
     <Footer/>
     </Box>
-  );
+  );  
 };
 
 export default Chat;
