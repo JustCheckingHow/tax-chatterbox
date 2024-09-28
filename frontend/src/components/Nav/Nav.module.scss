@@ -1,0 +1,28 @@
+.nav{
+    border-bottom: .125rem solid #f1f1f1;
+  height: 80px;
+  display: flex;
+  align-items: center;
+
+  &__container{
+    width: 100% ;
+    display: flex;
+    padding: 0 24px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  &__ul{
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin: 0 0 0 auto;
+    padding: 0;
+  }
+
+  &__logo{
+    h1{
+      margin: 0;
+      font-size: 1.71875rem;
+    }
+  }
+}

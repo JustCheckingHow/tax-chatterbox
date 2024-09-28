@@ -1,65 +1,10 @@
 import json
+
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-from asgiref.sync import sync_to_async
-import openai
+from loguru import logger
 
-# Assuming you have set up your OpenAI API key in your environment variables
-openai.api_key = "your-openai-api-key"
+from . import chat_utils
 
-class ChatConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.room_name = "tax_chat"
-        self.room_group_name = f"chat_{self.room_name}"
-
-        # Join room group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
-
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
-
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'sender': 'user'
-            }
-        )
-
-        # Send message to AI consumer
-        await self.channel_layer.send(
-            'ai_response',
-            {
-                'type': 'ai_message',
-                'message': message,
-                'response_channel': self.channel_name
-            }
-        )
-
-    async def chat_message(self, event):
-        message = event['message']
-        sender = event['sender']
-
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'message': message,
-            'sender': sender
-        }))
 
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -68,33 +13,48 @@ class AIConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         pass
 
-    async def ai_message(self, event):
-        message = event['message']
-        response_channel = event['response_channel']
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        logger.info(f"Received message: {text_data_json}")
 
-        # Get AI response
-        ai_response = await self.get_ai_response(message)
+        message = text_data_json["text"]
+        required_info = text_data_json["required_info"]
+        messages = text_data_json["history"]
+        is_necessary = text_data_json["is_necessary"]
 
-        # Send AI response back to the chat consumer
-        await self.channel_layer.send(
-            response_channel,
-            {
-                'type': 'chat_message',
-                'message': ai_response,
-                'sender': 'ai'
-            }
+        messages_parsed = []
+        for msg in messages:
+            if msg["sender"] == "user":
+                messages_parsed.append({"role": "user", "content": msg["message"]})
+            elif msg["sender"] == "ai":
+                messages_parsed.append({"role": "assistant", "content": msg["message"]})
+
+        # Check whether the form is even necessary
+        if is_necessary == "unknown":
+            answer = await chat_utils.verify_if_necessary(message, messages_parsed)
+            logger.info(f"AI response: {answer}")
+            await self.send(text_data=json.dumps({"message": answer, "command": "isNecessary"}))
+
+            if is_necessary == "unknown":
+                res = await chat_utils.question_if_necessary(
+                    message,
+                    messages_parsed,
+                    lambda x: self.send(text_data=json.dumps({"message": x, "command": "basicFlowPartial"})),
+                )
+                await self.send(text_data=json.dumps({"message": res, "command": "basicFlowComplete"}))
+                return
+
+        # Extract information from user message and prompt them for missing info
+        answer = await chat_utils.parse_info(message, required_info)
+        logger.info(f"AI response: {answer}")
+        await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
+
+        # Send message to AI consumer
+        answer = await chat_utils.get_ai_response(
+            message,
+            messages_parsed,
+            required_info=[i for i in required_info if required_info[i].strip() == ""],
+            callback=lambda x: self.send(text_data=json.dumps({"message": x, "command": "basicFlowPartial"})),
         )
-
-    @sync_to_async
-    def get_ai_response(self, message):
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful tax assistant."},
-                    {"role": "user", "content": message}
-                ]
-            )
-            return response.choices[0].message['content']
-        except Exception as e:
-            return f"An error occurred: {str(e)}"
+        logger.info(f"AI response: {answer}")
+        await self.send(text_data=json.dumps({"message": answer, "command": "basicFlowComplete"}))

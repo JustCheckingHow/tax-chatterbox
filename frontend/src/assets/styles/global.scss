@@ -1,0 +1,51 @@
+@import "btn";
+@import "input";
+@import "uploader";
+
+$color: #232323;
+
+*{
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+    font-family: "Open Sans", system-ui;
+}
+body{
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+    color: #222;
+}
+
+h1,h2,h3,h4,h5,h6,p{
+    margin: 0;
+}
+
+h2{
+    font-size: 2.5em;
+    line-height: 1.2;
+}
+
+h3{
+    font-size: 1.625em;
+}
+
+.container{
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    max-width: 1180px;
+}
+
+a, a:link, a:visited{
+    color: #0052a5;
+}
+
+.button{
+
+}
+
+label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: #1b1b1b;
+}
