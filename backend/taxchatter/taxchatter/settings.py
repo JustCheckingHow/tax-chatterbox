@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "channels",  # Add this line
+    "chat",  # Add this line
+    "rest_framework",  # Add this line
 ]
 
 MIDDLEWARE = [
@@ -122,3 +125,7 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Add these lines at the end of the file
+ASGI_APPLICATION = "taxchatter.asgi.application"
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
