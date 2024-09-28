@@ -42,6 +42,10 @@
   cursor: not-allowed;
   z-index: 3;
 }
+.gov-file-uploader .gov-file-uploader__files-list ul{
+  list-style: none;
+  padding: 0;
+}
 .gov-file-uploader .gov-file-uploader__files-list li {
   position: relative;
   padding: 0.9375rem 0 1.5625rem;
@@ -105,4 +109,16 @@
   width: 1.25rem;
   height: 1.25rem;
   background: transparent url('close-x.4dd3b92bf7789515a855.svg') 0 0 no-repeat;
+}
+
+
+.gov-progress__progress-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  white-space: nowrap;
+  background-color: #0052a5;
+  height: .625rem;
 }

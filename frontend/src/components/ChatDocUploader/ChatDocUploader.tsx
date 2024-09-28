@@ -7,9 +7,9 @@ const ChatDocUploader = () => {
     const [files, setFiles] = useState<File[]>([]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (files) {
-            setFiles([...files]);
+        const selectedFiles = e.target.files;
+        if (selectedFiles) {
+            setFiles([...selectedFiles]);
         }
     };
 
@@ -18,7 +18,7 @@ const ChatDocUploader = () => {
         files.forEach((file) => {
             formData.append('files', file);
         });
-        const response = await fetch('http://localhost:3000/api/upload', {
+        const response = await fetch('http://localhost:8001/api/upload', {
             method: 'POST',
             body: formData,
         });
@@ -28,7 +28,7 @@ const ChatDocUploader = () => {
     };
 
     return (
-        <form encType="multipart/form-data" className={styles.uploader__container} noValidate>
+        <div className={styles.uploader__container}>
             <div className="gov-file-uploader ">
                 <div className="gov-file-uploader__header">
                     <h3>Dodaj pliki</h3>
@@ -39,11 +39,13 @@ const ChatDocUploader = () => {
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         tabIndex={-1}
+                        onChange={handleFileChange}
                     />
                     <p>Przeciągnij i upuść pliki na to pole<br/>
                         albo załaduj z dysku.</p>
                     <button
                         className="btn btn-secondary"
+                        onClick={handleUpload}
                     >
                         <span>Dodaj plik</span>
                     </button>
@@ -53,25 +55,20 @@ const ChatDocUploader = () => {
                 </div>
                 <div className="gov-file-uploader__files-list">
                     <ul>
-                        <li>
-                            nazwa_pliku.pdf<br/>
-                            <div className="gov-progress gov-progress--small">
-                                <div className="gov-progress__progress-bar" style={{ width: progress + '%' }}>
+                        {files.map((file, index) => (
+                            <li key={index}>
+                                {file.name}<br/>
+                                <div className="gov-progress gov-progress--small">
+                                    <div className="gov-progress__progress-bar" style={{ width: '100%' }}>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="gov-progress__label">50%</div>
-                            <div className="error__message">
-                                Błąd podczas dodawania pliku
-                            </div>
-                            <button
-                                type="button"
-                                aria-label="Zamknij">
-                            </button>
-                        </li>
+                                <div className="gov-progress__label">100%</div>
+                            </li>
+                        ))}
                     </ul>
                 </div>
             </div>
-        </form>
+        </div>
     )
 }
 
