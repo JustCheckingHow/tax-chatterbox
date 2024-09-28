@@ -23,6 +23,7 @@ interface Message {
   hidden?: boolean;
 }
 
+
 const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   if (hidden) {
     return null;
@@ -53,22 +54,62 @@ const Chat: React.FC = () => {
   const [newestMessage, setNewestMessage] = useState<Message | null>(null);
   const [isNecessary, setIsNecessary] = useState<boolean | "unknown">("unknown");
   const [view, setView] = useState("");
-  const [requiredInfo, setRequiredInfo] = useState<{ [key: string]: string }>({
-    // PCC-3
-    "Imię": "",
-    "Nazwisko": "",
-    "Adres": "",
-    "PESEL": "",
-    "Numer telefonu": "",
-    "Wartość przedmiotu": ""
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [requiredInfo, setRequiredInfo] = useState<any>([
+    { "Pesel": { "description": "Numer Pesel", "required": true } },
+    { "P_4": { "description": "Data Dokonania czynności", "required": true } },
+    { "DataZlozeniaDeklaracji": { "description": "Data złożenia deklaracji", "required": false } },
+    { "Imie": { "description": "Imię", "required": true } },
+    { "Nazwisko": { "description": "Nazwisko", "required": true } },
+    { "ImieOjca": { "description": "Imię ojca", "required": true } },
+    { "ImieMatki": { "description": "Imię matki", "required": true } },
+    { "KodKraju": { "description": "Kod kraju", "required": true } },
+    { "Wojewodztwo": { "description": "Województwo", "required": true } },
+    { "Powiat": { "description": "Powiat", "required": true } },
+    { "Gmina": { "description": "Gmina", "required": true } },
+    { "Ulica": { "description": "Ulica", "required": true } },
+    { "NrDomu": { "description": "Numer domu", "required": true } },
+    { "NrLokalu": { "description": "Numer lokalu", "required": true } },
+    { "Miejscowosc": { "description": "Miejscowość", "required": true } },
+    { "KodPocztowy": { "description": "Kod pocztowy", "required": true } },
+    { "P_6": { "description": "Cel złożenia deklaracji", "required": false } },
+    {
+      "P_7": {
+        "description": "Podmiot składający deklarację. 1 - podmioty zobowiązane solidarnie do zapłaty podatku, w przeciwnym wypadku 5",
+        "required": true,
+      }
+    },
+    { "P_20": { "description": "Przedmiot opatkowania 1 - umowa", "required": true } },
+    {
+      "P_21": {
+        "description": "Miejsce położenia rzeczy 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",
+        "required": false,
+      }
+    },
+    {
+      "P_22": {
+        "description": "Miejsce położenia CWC 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",
+        "required": false,
+      }
+    },
+    { "P_23": { "description": "Opis", "required": true } },
+    {
+      "P_26": {
+        "description": "Podstawa opatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)",
+        "required": true,
+      }
+    },
+    { "P_62": { "description": "Liczba dodatkowych załączników", "required": true } },
+  ]);
+
+  const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo, history: messages, is_necessary: isNecessary }));
+      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo, obtained_info: obtainedInfo, history: messages, is_necessary: isNecessary }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
@@ -90,7 +131,7 @@ const Chat: React.FC = () => {
       else if (lastMessageData.command === 'informationParsed') {
         const newestInfo = lastMessageData.message as Record<string, string>;
         const nonEmpty = Object.fromEntries(Object.entries(newestInfo).filter(([, v]) => v !== ''));
-        setRequiredInfo(info => ({ ...info, ...nonEmpty }));
+        setObtainedInfo(info => ({ ...info, ...nonEmpty }));
 
         if (Object.keys(nonEmpty).length > 0) {
           const msg = `Nowe informacje. ${Object.entries(nonEmpty).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
@@ -148,6 +189,7 @@ const Chat: React.FC = () => {
                   command: 'basicFlow',
                   text: message.text.replaceAll("\n", " "),
                   required_info: requiredInfo,
+                  obtained_info: obtainedInfo,
                   history: messages,
                   is_necessary: isNecessary
                 };
@@ -186,12 +228,11 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-        <Checklist required_info={requiredInfo} />
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
       </div>
-      <Checklist required_info={requiredInfo} />
       <GovermentSelect />
       <FinalDocument />
-    <Footer/>
+      <Footer />
     </Box>
   );
 };
