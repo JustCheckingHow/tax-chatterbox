@@ -16,7 +16,7 @@ const ChatDocUploader = () => {
     const handleUpload = async () => {
         const formData = new FormData();
         files.forEach((file) => {
-            formData.append('files', file);
+            formData.append('file', file);
         });
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/upload`, {
             method: 'POST',

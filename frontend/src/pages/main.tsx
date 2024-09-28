@@ -7,8 +7,6 @@ import { Link } from 'react-router-dom';
 
 
 const Main: React.FC = () => {
-
-
   return (
     <Box sx={{ height: '100vh', width: "100%", display: "flex", flexDirection: "column"}}>
       <Nav/>

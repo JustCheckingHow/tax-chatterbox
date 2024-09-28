@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,11 +46,13 @@ INSTALLED_APPS = [
     "channels",  # Add this line
     "chat",  # Add this line
     "rest_framework",  # Add this line
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -133,3 +136,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Add these lines at the end of the file
 ASGI_APPLICATION = "taxchatter.asgi.application"
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CORS_ALLOW_ALL_ORIGINS = True
