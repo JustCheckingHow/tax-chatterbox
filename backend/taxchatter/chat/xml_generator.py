@@ -1,7 +1,48 @@
 import datetime
 import xml.etree.ElementTree as ET
 
+required_fields = [
+    {"Pesel": "Numer Pesel"},
+    {"Imie": "Imię"},
+    {"Nazwisko": "Nazwisko"},
+    {"DataUrodzenia": "Data urodzenia"},
+    {"ImieOjca": "Imię ojca"},
+    {"ImieMatki": "Imię matki"},
+    {"KodKraju": "Kod kraju"},
+    {"Wojewodztwo": "Województwo"},
+    {"Powiat": "Powiat"},
+    {"Gmina": "Gmina"},
+    {"Ulica": "Ulica"},
+    {"NrDomu": "Numer domu"},
+    {"NrLokalu": "Numer lokalu"},
+    {"Miejscowosc": "Miejscowość"},
+    {"KodPocztowy": "Kod pocztowy"},
+    # {"UrzadSkarbowy": "Kod Urzędu Skarbowego"},
+    {"CelZlozeniaDeklaracji": "Cel złożenia deklaracji"},
+    {"Podmiot": "Podmiot"},
+    {"PrzedmiotOpatkowania": "Przedmiot opatkowania"},
+    {"MiesjcePolozeniaRzeczy": "Miejsce położenia rzeczy"},
+    {"MiesjcePolozeniaCwc": "Miejsce położenia CWC"},
+    {"Opis": "Opis"},
+    {"P_7": "Podmiot składający deklarację 1 - podmiot zobowiązany solidarnie do zapłaty podatku, 5 - inny podmiot"},
+    {"P_20": "Przedmiot opatkowania 1 - umowa"},
+    {"P_21": "Miejsce położenia rzeczy 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa"},
+    {"P_22": "Miejsce położenia CWC 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa"},
+    {"P_23": "Opis"},
+    {"P_26": "Podstawa opatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)"},
+    # {"P_27": "Podatek należny "},
+    # {"P_46": "Podatek wymagany"},
+    # {"P_53": "Podatek do zapłaty"},
+    {"P_62": "Liczba osób"},
+]
+
+# Pesel
+# data dokonania czynności i zawarcia umowy
+
+
 input_json_schema = {
+    "pesel": "1100901142",
+    "kod_urzedu": "0271",
     "transaction_date": "2024-09-18",  # P4
     "declaration_date": "2024-08-18",
     "declaration_purpose": "1",  # P6
