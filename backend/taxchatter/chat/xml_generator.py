@@ -482,8 +482,62 @@ class PCC3_6_Schema:
         return self.P_62
 
 
-# class SDZ2_6_Schema:
-# def __init__(self, P4):
+class SDZ2_6_Schema:
+    def __init__(
+        self,
+        P4=None,
+        P_40=None,
+        P_45=None,
+        P_46=None,
+        P_47=None,
+        P_48=None,
+        P_49=None,
+        P_50=None,
+        P_51=None,
+        P_52=None,
+        P_80=None,
+        P_81=None,
+        P_82=None,
+        P_87=None,
+        P_88=None,
+        P_89=None,
+        P_90=None,
+        P_91=None,
+        P_92=None,
+        P_93=None,
+    ):
+        # P_4 - data złożenia deklaracji
+        self.P4 = P4
+        # P_40 - podstawa opodatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)
+        # - opodatkowana wg stawki podatku 0,1 %
+        self.P_40 = P_40
+        # P_45 - obliczony należny podatek od czynności cywilnoprawnej (po zaokrągleniu do pełnych złotych)
+        self.P_45 = P_45
+
+        self.P_46 = P_46
+        self.P_47 = P_47
+        self.P_48 = P_48
+        self.P_49 = P_49
+        self.P_50 = P_50
+        self.P_51 = P_51
+        self.P_52 = P_52
+        self.P_80 = P_80
+        self.P_81 = P_81
+        self.P_82 = P_82
+        self.P_87 = P_87
+        self.P_88 = P_88
+        self.P_89 = P_89
+        self.P_90 = P_90
+        self.P_91 = P_91
+        self.P_92 = P_92
+
+
+def required_fields_pcc3():
+    return [
+        *OsobaFizyczna.get_schema(),
+        *AdresZamieszkania.get_schema(),
+        *PCC3_6_Schema.get_schema(),
+    ]
 
 
 def validate_json_pcc3(json_data):

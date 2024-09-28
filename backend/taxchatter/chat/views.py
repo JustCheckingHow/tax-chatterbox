@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from .address_verification import GMAPS, all_urzedy, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
-from .xml_generator import generate_xml, required_fields, validate_json_pcc3
+from .xml_generator import generate_xml, required_fields_pcc3, validate_json_pcc3
 
 
 def chat_page(request):
@@ -43,7 +43,7 @@ class FileUploadView(APIView):
 
 class XmlSchemaView(APIView):
     def get(self, request):
-        return Response({"message": required_fields}, status=status.HTTP_200_OK)
+        return Response({"message": required_fields_pcc3()}, status=status.HTTP_200_OK)
 
 
 class ValidateUserDataView(APIView):
