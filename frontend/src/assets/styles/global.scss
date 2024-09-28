@@ -1,6 +1,7 @@
 @import "./btn";
 @import "./input";
 @import "./uploader";
+@import "./select";
 
 $color: #232323;
 
@@ -44,4 +45,14 @@ label {
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
     color: #1b1b1b;
+}
+
+.box{
+    padding: 12px;
+    border: .125em solid #f1f1f1;
+    margin-top: 24px;
+}
+
+img{
+    max-width: 100%;
 }

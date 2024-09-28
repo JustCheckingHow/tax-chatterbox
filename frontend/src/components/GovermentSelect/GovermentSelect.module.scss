@@ -1,0 +1,13 @@
+
+
+.govermentSelect{
+    &__container{
+        padding: 12px;
+        border: .125em solid #f1f1f1;
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
+}

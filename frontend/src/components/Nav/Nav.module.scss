@@ -9,6 +9,7 @@
     display: flex;
     padding: 0 24px;
     align-items: center;
+    gap: 12px;
     justify-content: space-between;
   }
   &__ul{
@@ -17,6 +18,15 @@
     gap: 24px;
     margin: 0 0 0 auto;
     padding: 0;
+    list-style: none;
+    a{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      img{
+        height: 24px;
+      }
+    }
   }
 
   &__logo{

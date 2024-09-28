@@ -1,0 +1,157 @@
+label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: #1b1b1b;
+  }
+  legend {
+    font-size: 0.875rem;
+    color: #1b1b1b;
+    line-height: normal;
+  }
+  .invalid-feedback {
+    display: none;
+    font-size: 0.875rem;
+    color: #d5233f;
+  }
+  .invalid-feedback ~ .counter {
+    display: inline-block;
+  }
+  .hint {
+    color: #767676;
+  }
+  .hint i::before {
+    font-family: "gov-icons";
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    content: "";
+    font-size: 1.1rem;
+  }
+  .counter {
+    color: #1b1b1b;
+    font-size: 0.875rem;
+    text-align: right;
+  }
+  select,
+  .custom-multiselect {
+    display: inline-block;
+    width: 100%;
+    height: 2.75rem;
+    padding: 0.5rem 3.1rem 0.5rem 0.75rem;
+    line-height: 1.5;
+    vertical-align: middle;
+    background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='UTF-8'%3F%3E%3Csvg width='20px' height='20px' viewBox='0 0 20 20' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cdefs%3E%3Cpath d='M5.97487373,6.94943372 C5.71064239,6.95603366 5.44429361,6.85850717 5.24264069,6.65685425 L0.292893219,1.70710678 C-0.0976310729,1.31658249 -0.0976310729,0.683417511 0.292893219,0.292893219 C0.683417511,-0.0976310729 1.31658249,-0.0976310729 1.70710678,0.292893219 L5.97487373,4.56066017 L10.2426407,0.292893219 C10.633165,-0.0976310729 11.26633,-0.0976310729 11.6568542,0.292893219 C12.0473785,0.683417511 12.0473785,1.31658249 11.6568542,1.70710678 L6.70710678,6.65685425 C6.50545386,6.85850717 6.23910508,6.95603366 5.97487373,6.94943372 Z' id='path-1'%3E%3C/path%3E%3C/defs%3E%3Cg id='-' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cg id='ikona/nawigacja/select/down'%3E%3Cg id='Rectangle' transform='translate(4.000000, 7.000000)'%3E%3Cmask id='mask-2' fill='white'%3E%3Cuse xlink:href='%23path-1'%3E%3C/use%3E%3C/mask%3E%3Cuse id='Mask' fill='%230052A5' xlink:href='%23path-1'%3E%3C/use%3E%3Crect fill='%230052A5' mask='url(%23mask-2)' x='-4' y='-7' width='20' height='20'%3E%3C/rect%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center right 0.75rem;
+    background-size: 1.6rem;
+    border: 1px solid #b7b7b7;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    height: 2.75rem;
+    color: #1b1b1b;
+    background-color: #fff;
+  }
+  select.blue-text,
+  .custom-multiselect.blue-text {
+    color: #0052a5;
+  }
+  select[multiple], select[size] select:not([size="1"]),
+  .custom-multiselect[multiple],
+  select[size] .custom-multiselect:not([size="1"]),
+  .custom-multiselect[size] select:not([size="1"]),
+  .custom-multiselect[size] .custom-multiselect:not([size="1"]) {
+    height: auto;
+    padding-right: 3.1rem;
+    background-image: none;
+  }
+  select:disabled,
+  .custom-multiselect:disabled {
+    background-color: #f1f1f1;
+    cursor: not-allowed;
+  }
+  select::-ms-expand,
+  .custom-multiselect::-ms-expand {
+    display: none;
+  }
+  select:focus, select[state-focus],
+  .custom-multiselect:focus,
+  .custom-multiselect[state-focus] {
+    box-shadow: 0 0 3px 0.2rem rgba(0, 82, 165, 0.5);
+  }
+  select:active, select[state-active],
+  .custom-multiselect:active,
+  .custom-multiselect[state-active] {
+    border-bottom-width: 3px;
+    border-bottom-color: #0052a5;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  select.is-invalid,
+  .custom-multiselect.is-invalid {
+    border-bottom-width: 3px;
+    border-bottom-color: #d5233f;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  select.is-invalid ~ .invalid-feedback,
+  .custom-multiselect.is-invalid ~ .invalid-feedback {
+    display: inline-block;
+  }
+  select.is-invalid:focus,
+  .custom-multiselect.is-invalid:focus {
+    box-shadow: 0 0 3px 0.2rem rgba(213, 35, 63, 0.5);
+  }
+  .custom-multiselect {
+    position: relative;
+    padding: 0;
+  }
+  .custom-multiselect > label {
+    padding: 0.5rem 3.1rem 0.5rem 0.75rem;
+    -webkit-user-select: none;
+            user-select: none;
+  }
+  .custom-multiselect select {
+    display: none;
+  }
+  .custom-multiselect button {
+    border-radius: 0.25rem;
+    text-align: left;
+  }
+  .custom-multiselect .dropdown-list {
+    width: 100%;
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #b7b7b7;
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.75rem;
+    margin-top: 0.5rem;
+    max-height: 15rem;
+    overflow-y: auto;
+    z-index: 1;
+  }
+  .custom-multiselect .dropdown-list.hidden {
+    display: none;
+  }
+  .custom-multiselect .dropdown-list .custom-checkbox {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid #f1f1f1;
+  }
+  .custom-multiselect .dropdown-list .custom-checkbox label {
+    font-size: 0.875rem;
+  }
+  .custom-multiselect .dropdown-list .custom-checkbox:last-child {
+    border-bottom-color: transparent;
+  }
+  .custom-multiselect .dropdown-list .custom-checkbox.focused {
+    background-color: #f1f1f1;
+  }
+  
