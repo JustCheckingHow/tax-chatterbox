@@ -134,7 +134,7 @@ const Chat: React.FC = () => {
                     />
                 </div>
             ) : <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <ChatDocUploader/>
+                <ChatDocUploader sendMessage={sendMessage}/>
                 <p onClick={() => {setView('')}}>Wróć</p>
               </div>)}
         <ul className={styles.chat__message__container}>
