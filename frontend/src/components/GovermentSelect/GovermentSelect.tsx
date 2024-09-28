@@ -4,6 +4,7 @@ interface GovermentSelectProps {
   closestUrzad: any[];
   updateUrzad: (code: string) => void;
   allUrzedy: any[];
+  generateXml: () => void;
 }
 
 function GovermentSelect(props: GovermentSelectProps) {
