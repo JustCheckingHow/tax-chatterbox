@@ -45,9 +45,6 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
       <div className={styles.chat__message__content}>
         {message}
       </div>
-      <div className={styles.chat__message__author}>
-        {senderName === 'AI' && <img src={logo} alt="logo" />}
-      </div>
     </li>
   )
 }
@@ -232,9 +229,9 @@ const Chat: React.FC = () => {
           </form>
         </div>
         <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
-      </div>
-      <GovermentSelect />
+        <GovermentSelect />
       <FinalDocument />
+      </div>
       <Footer />
     </Box>
   );
