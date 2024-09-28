@@ -17,12 +17,14 @@ class AIConsumer(AsyncWebsocketConsumer):
         messages_parsed = []
         for msg in messages:
             if msg["sender"] == "user":
-                messages_parsed.append({"role": "user", "content": msg["message"]})
+                messages_parsed.append({"role": "user", "content": msg["message"].replace("\n", " ")})
             elif msg["sender"] == "ai":
-                messages_parsed.append({"role": "assistant", "content": msg["message"]})
+                messages_parsed.append({"role": "assistant", "content": msg["message"].replace("\n", " ")})
         return messages_parsed
 
-    async def send_on_the_fly(self, method, message, history, command, final_command, required_info=None):
+    async def send_on_the_fly(
+        self, method, message, history, command, final_command, required_info=None, obtained_info=None
+    ):
         if required_info is None:
             res = await method(
                 message,
@@ -36,6 +38,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 message,
                 history,
                 required_info,
+                obtained_info,
                 callback=lambda x: self.send(
                     text_data=json.dumps({"message": x, "command": command, "history": history})
                 ),
@@ -48,6 +51,7 @@ class AIConsumer(AsyncWebsocketConsumer):
 
         message = text_data_json["text"]
         required_info = text_data_json["required_info"]
+        obtained_info = text_data_json["obtained_info"]
         messages = text_data_json["history"]
         is_necessary = text_data_json["is_necessary"]
         messages_parsed = self.parse_messages_history(messages)
@@ -68,8 +72,8 @@ class AIConsumer(AsyncWebsocketConsumer):
         # Extract information from user message and prompt them for missing info
         answer = await chat_utils.parse_info(message, messages_parsed, required_info)
         # Remove unchanged values
-        answer = {k: v for k, v in answer.items() if str(v).strip() != str(required_info[k]).strip()}
-        required_info.update(answer)
+        answer = {k: v for k, v in answer.items() if str(v).strip() != str(obtained_info.get(k, None)).strip()}
+        obtained_info.update(answer)
         await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
 
         # Check whether the form is even necessary
@@ -108,4 +112,5 @@ class AIConsumer(AsyncWebsocketConsumer):
             "basicFlowPartial",
             "basicFlowComplete",
             required_info=required_info,
+            obtained_info=obtained_info,
         )
