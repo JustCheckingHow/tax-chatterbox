@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from .address_verification import GMAPS, all_urzedy, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
-from .xml_generator import generate_xml, required_fields, validate_json
+from .xml_generator import generate_xml, required_fields, validate_json_pcc3
 
 
 def chat_page(request):
@@ -50,7 +50,7 @@ class ValidateUserDataView(APIView):
     def post(self, request):
         data = request.data
         try:
-            validate_json(data)
+            validate_json_pcc3(data)
             return Response(
                 {"message": "User data validated successfully", "data": data},
                 status=status.HTTP_200_OK,
