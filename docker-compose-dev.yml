@@ -1,10 +1,12 @@
-# version: "3.8"
+version: "3.8"
 
 services:
   backend:
     build: ./backend
     ports:
-      - "8001:8000"
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
     environment:
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
@@ -13,5 +15,7 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
     environment:
       - NODE_ENV=development
