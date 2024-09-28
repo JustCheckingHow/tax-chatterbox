@@ -6,8 +6,8 @@ const Nav: React.FC = () => {
         <footer className={styles.footer}>
             <div className={styles.footer__container + " container"}>
                 <div className={styles.footer__col}>
-                    <h3>Tax Chatter</h3>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ex excepturi labore neque?</p>
+                    <h3>JustCheckingTax</h3>
+                    <p></p>
                 </div>
             </div>
         </footer>
