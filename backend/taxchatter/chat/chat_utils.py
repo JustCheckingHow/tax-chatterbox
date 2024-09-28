@@ -72,7 +72,7 @@ async def parse_info(message, history, required_info) -> dict:
         + "\n- user: "
         + message
         + "\n"
-        "Wyciągnij tylko informacje z ostatniej wiadomości użytkownika."
+        "Wyciągnij informacje z całej rozmowy."
     )
 
     res = await _get_ai_response(

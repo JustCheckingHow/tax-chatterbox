@@ -31,6 +31,14 @@ class AIConsumer(AsyncWebsocketConsumer):
             elif msg["sender"] == "ai":
                 messages_parsed.append({"role": "assistant", "content": msg["message"]})
 
+        # Extract information from user message and prompt them for missing info
+        answer = await chat_utils.parse_info(message, messages_parsed, required_info)
+        logger.info(f"AI response: {answer}")
+        # Remove unchanged values
+        answer = {k: v for k, v in answer.items() if str(v).strip() != str(required_info[k]).strip()}
+        required_info.update(answer)
+        await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
+
         # Check whether the form is even necessary
         answer = await chat_utils.verify_if_necessary(message, messages_parsed)
         if is_necessary == "unknown" or answer == "nie wiem":
@@ -45,6 +53,7 @@ class AIConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"message": res, "command": "basicFlowComplete"}))
             return
 
+        # If we know that the form is not necessary, tell user why
         if answer == "nie musi" or not is_necessary:
             res = await chat_utils.rationale_why_not_necessary(
                 message,
@@ -53,14 +62,6 @@ class AIConsumer(AsyncWebsocketConsumer):
             )
             await self.send(text_data=json.dumps({"message": res, "command": "basicFlowComplete"}))
             return
-
-        # Extract information from user message and prompt them for missing info
-        answer = await chat_utils.parse_info(message, messages_parsed, required_info)
-        logger.info(f"AI response: {answer}")
-        # Remove unchanged values
-        answer = {k: v for k, v in answer.items() if str(v).strip() != str(required_info[k]).strip()}
-
-        await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
 
         # Send message to AI consumer
         answer = await chat_utils.get_ai_response(
