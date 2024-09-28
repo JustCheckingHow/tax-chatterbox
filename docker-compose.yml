@@ -1,10 +1,8 @@
-version: "3.8"
-
 services:
   backend:
     build: ./backend
     ports:
-      - "8001:8000"
+      - "8000:8000"
     volumes:
       - ./backend:/app
     environment:
@@ -17,9 +15,5 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend:/app
-      - node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
-
-volumes:
-  node_modules:
