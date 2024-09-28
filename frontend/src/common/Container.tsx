@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Grid, Paper, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import { Home, Settings, Help } from '@mui/icons-material';
 
-const AppContainer: React.FC = ({ children }) => {
+const AppContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <Container maxWidth="lg">
       <Grid container spacing={3}>
