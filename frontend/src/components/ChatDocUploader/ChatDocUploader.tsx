@@ -1,30 +1,30 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
 import {Simulate} from "react-dom/test-utils";
 import progress = Simulate.progress;
 
 const ChatDocUploader = () => {
-    const [files, setFiles] = useState<File[]>([]);
+    // const [files, setFiles] = useState<File[]>([]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (files) {
-            setFiles([...files]);
-        }
-    };
+    // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const files = e.target.files;
+    //     if (files) {
+    //         setFiles([...files]);
+    //     }
+    // };
 
-    const handleUpload = async () => {
-        const formData = new FormData();
-        files.forEach((file) => {
-            formData.append('files', file);
-        });
-        const response = await fetch('http://localhost:3000/upload', {
-            method: 'POST',
-            body: formData,
-        });
-        if (response.ok) {
-            console.log('Files uploaded');
-        }
-    };
+    // const handleUpload = async () => {
+    //     const formData = new FormData();
+    //     files.forEach((file) => {
+    //         formData.append('files', file);
+    //     });
+    //     const response = await fetch('http://localhost:3000/upload', {
+    //         method: 'POST',
+    //         body: formData,
+    //     });
+    //     if (response.ok) {
+    //         console.log('Files uploaded');
+    //     }
+    // };
 
     return (
         <form encType="multipart/form-data" noValidate>

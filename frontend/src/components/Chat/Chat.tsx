@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Button, Grid, Paper, TextField, Typography} from "@mui/material";
+import {Grid, Typography} from "@mui/material";
 import GridItem from "../GridItem/GridItem.tsx";
 import styles from "./Chat.module.scss";
 import ChatDocUploader from "../ChatDocUploader/ChatDocUploader.tsx";
@@ -44,6 +44,7 @@ const Chat = () => {
                     className={styles.chat__grid}
                 >
                     <GridItem
+                    onClick={() => {}}
                         icon={chatIcon}
                         heading={"Opisz swoją sprawę"}
                         content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
@@ -55,6 +56,7 @@ const Chat = () => {
                         content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
                     />
                     <GridItem
+                    onClick={() => {}}
                         icon={voiceIcon}
                         heading={"Porozmawiaj z asystentem"}
                         content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
@@ -70,7 +72,7 @@ const Chat = () => {
                             onChange={(e) => setInputValue(e.target.value)}
                         />
                         <button type={"button"} className={"btn btn-secondary"}>
-                            <svg version="1.1" id="Warstwa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                            <svg version="1.1" id="Warstwa_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
                                  viewBox="0 0 54 54">
                                 <title>brexit-mpit</title>
                                 <line className="st0" x1="8.3" y1="13.5" x2="2.3" y2="13.5"/>
