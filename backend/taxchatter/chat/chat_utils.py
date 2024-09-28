@@ -157,3 +157,51 @@ async def rationale_why_not_necessary(message, history, callback=None):
     )
 
     return res
+
+
+async def recognize_question(message, history):
+    history = history[-6:]
+    history.append({"role": "user", "content": message})
+
+    system = (
+        "Jesteś AI pomocnikiem podatnika. Rozpoznaj intencję użytkownika. " "Odpowiadaj tylko i wyłącznie po polsku."
+    )
+
+    user = (
+        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". "  # noqa: E501
+        "Użytkownik pyta o coś związanego z podatkami, opisuje sytuację, wita się, czy pyta o coś niezwiązanego? \n"
+        "Odpisz tylko jednym słowem: 'pytanie', 'sytuacja', 'powitanie', 'inne'."
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            *history,
+            {"role": "user", "content": user},
+        ],
+    )
+
+    return res
+
+
+async def refuse_to_answer(message, history, callback=None):
+    history = history[-6:]
+    history.append({"role": "user", "content": message})
+
+    system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po polsku."
+
+    user = (
+        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"  # noqa: E501
+        "Użytkownik pyta o coś niezwiązanego z tematem. Grzecznie odmów odpowiedzi. Nie podaj żadnych informacji."
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            *history,
+            {"role": "user", "content": user},
+        ],
+        callback=callback,
+    )
+
+    return res

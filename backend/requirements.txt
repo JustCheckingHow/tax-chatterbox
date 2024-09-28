@@ -3,6 +3,7 @@ daphne==4.0.0
 Django==5.1.1
 django-cors-headers==4.4.0
 djangorestframework==3.14.0
+duckduckgo-search==6.2.13
 loguru==0.7.2
 openai==1.50.2
 pdf2image==1.17.0
