@@ -1,5 +1,8 @@
 import json
 
+import httpx
+from bs4 import BeautifulSoup
+from duckduckgo_search import DDGS
 from loguru import logger
 from openai import AsyncOpenAI
 
@@ -7,7 +10,6 @@ from .llm_prompts.bielik import RULES
 
 
 async def _get_ai_response(messages, callback=None):
-    logger.info(f"Messages: {messages}")
     client = AsyncOpenAI(
         # base_url=os.environ["RUNPOD_BIELIK_URL"] + "/v1",
         # api_key=os.environ["RUNPOD_API_KEY"],
@@ -44,7 +46,6 @@ async def get_ai_response(message, history, required_info, callback=None):
     system += "Zadawaj jedno pytanie na raz."
 
     user = message
-    logger.info(f"History: {history}")
     return await _get_ai_response(
         [
             {"role": "system", "content": system},
@@ -160,8 +161,9 @@ async def rationale_why_not_necessary(message, history, callback=None):
 
 
 async def recognize_question(message, history):
-    history = history[-6:]
     history.append({"role": "user", "content": message})
+
+    logger.info(f"History: {history}")
 
     system = (
         "Jesteś AI pomocnikiem podatnika. Rozpoznaj intencję użytkownika. " "Odpowiadaj tylko i wyłącznie po polsku."
@@ -185,14 +187,18 @@ async def recognize_question(message, history):
 
 
 async def refuse_to_answer(message, history, callback=None):
-    history = history[-6:]
     history.append({"role": "user", "content": message})
 
     system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po polsku."
+    history_str = (
+        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
+    )
+
+    logger.info(f"History: {history_str}")
 
     user = (
-        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"  # noqa: E501
-        "Użytkownik pyta o coś niezwiązanego z tematem. Grzecznie odmów odpowiedzi. Nie podaj żadnych informacji."
+        history_str
+        + "Użytkownik pyta o coś niezwiązanego z tematem. Grzecznie odmów odpowiedzi. Nie podaj żadnych informacji."
     )
 
     res = await _get_ai_response(
@@ -205,3 +211,57 @@ async def refuse_to_answer(message, history, callback=None):
     )
 
     return res
+
+
+async def scrap_ddgo_for_info(message, history, callback=None):
+    history = history[-6:]
+    history.append({"role": "user", "content": message})
+
+    history_str = (
+        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
+    )
+
+    system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po polsku."
+
+    user = history_str + "Użytkownik zadał pytanie. Przygotuj zapytanie do wyszukiwarki DuckDuckGo."
+
+    query = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    )
+
+    ddg_results_content = []
+
+    ddg_results = DDGS().text(query + " site:podatki.gov.pl", region="pl-pl", max_results=3)
+    for result in ddg_results:
+        markdown_content = await _scrap_website_to_markdown(result["href"])
+        ddg_results_content.append(f"---\nURL: {result['href']}\n\n{markdown_content}\n---\n")
+
+    content = "\n".join(ddg_results_content)
+
+    user = (
+        history_str + "Oto wyniki wyszukiwania DuckDuckGo: " + content + ". \n"
+        "Użytkownik zadał pytanie. Odpowiedz na nie na podstawie wyników wyszukiwania. Cytuj źródła."
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        callback=callback,
+    )
+
+    return res
+
+
+async def _scrap_website_to_markdown(url: str) -> str:
+    logger.info(f"Scraping {url}")
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        return soup.get_text()[:10000]

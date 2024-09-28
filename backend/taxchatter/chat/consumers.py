@@ -22,12 +22,24 @@ class AIConsumer(AsyncWebsocketConsumer):
                 messages_parsed.append({"role": "assistant", "content": msg["message"]})
         return messages_parsed
 
-    async def send_on_the_fly(self, method, message, history, command, final_command):
-        res = await method(
-            message,
-            history,
-            callback=lambda x: self.send(text_data=json.dumps({"message": x, "command": command, "history": history})),
-        )
+    async def send_on_the_fly(self, method, message, history, command, final_command, required_info=None):
+        if required_info is None:
+            res = await method(
+                message,
+                history,
+                callback=lambda x: self.send(
+                    text_data=json.dumps({"message": x, "command": command, "history": history})
+                ),
+            )
+        else:
+            res = await method(
+                message,
+                history,
+                required_info,
+                callback=lambda x: self.send(
+                    text_data=json.dumps({"message": x, "command": command, "history": history})
+                ),
+            )
         await self.send(text_data=json.dumps({"message": res, "command": final_command, "history": history}))
 
     async def receive(self, text_data):
@@ -42,15 +54,20 @@ class AIConsumer(AsyncWebsocketConsumer):
         messages_parsed = self.parse_messages_history(messages)
 
         intent = await chat_utils.recognize_question(message, messages_parsed)
+        logger.info(f"Intent: {intent}")
         if intent == "inne":
             await self.send_on_the_fly(
                 chat_utils.refuse_to_answer, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
             )
             return
+        elif intent == "pytanie":
+            await self.send_on_the_fly(
+                chat_utils.scrap_ddgo_for_info, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+            )
+            return
 
         # Extract information from user message and prompt them for missing info
         answer = await chat_utils.parse_info(message, messages_parsed, required_info)
-        logger.info(f"AI response: {answer}")
         # Remove unchanged values
         answer = {k: v for k, v in answer.items() if str(v).strip() != str(required_info[k]).strip()}
         required_info.update(answer)
@@ -80,5 +97,10 @@ class AIConsumer(AsyncWebsocketConsumer):
 
         # Send message to AI consumer
         await self.send_on_the_fly(
-            chat_utils.get_ai_response, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+            chat_utils.get_ai_response,
+            message,
+            messages_parsed,
+            "basicFlowPartial",
+            "basicFlowComplete",
+            required_info=required_info,
         )
