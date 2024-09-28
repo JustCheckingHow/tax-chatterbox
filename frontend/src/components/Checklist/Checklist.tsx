@@ -17,7 +17,6 @@ const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info }) =
                     const val = obtained_info[name];
                     const isChecked = val !== undefined;
 
-                    console.log(value, val, description);
                     return (
                         <li key={index} className={isChecked ? styles.checked : ""}>
                             <strong>{description}:</strong> {val}
