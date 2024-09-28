@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "react-use-websocket": "^4.8.1",
+    "sass": "^1.79.4"
+  }
+}
