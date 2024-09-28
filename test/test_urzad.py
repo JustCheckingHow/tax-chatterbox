@@ -1,6 +1,6 @@
 import requests
 
-ADDR = "http://localhost:8000/api/closestUrzad"
+ADDR = "http://localhost:8001/api/closestUrzad"
 
 
 def get_closests():
