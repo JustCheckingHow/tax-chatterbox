@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from "./Nav.module.scss";
 import logo from "../../assets/image/logo.png"
 import { Link } from 'react-router-dom';
@@ -8,6 +8,8 @@ import knowledgeIcon from "../../assets/icons/bazawiedzy.svg";
 import homeIcon from "../../assets/icons/home.svg";
 
 const Nav: React.FC = () => {
+    const [lang, setLang] = useState("pl");
+
     return (
         <nav className={styles.nav}>
             <div className={styles.nav__container}>
@@ -15,10 +17,12 @@ const Nav: React.FC = () => {
                     <img src={logo} alt="" />
                     <h1>JustCheckingTax</h1>
                 </Link>
-                <select name="" id="" style={{width: "90px"}}>
-                    <option value="pl">PL </option>
-                    <option value="en">EN </option>
-                    <option value="uk">UK </option>
+                <select name="lang" id="lang" style={{width: "90px"}} onChange={(e) => {
+                    setLang(e.target.value);
+                }}>
+                    <option value="pl" selected={lang === "pl"}>PL </option>
+                    <option value="en" selected={lang === "en"}>EN </option>
+                    <option value="uk" selected={lang === "uk"}>UK </option>
                 </select>
                 <ul className={styles.nav__ul}>
                     <li>

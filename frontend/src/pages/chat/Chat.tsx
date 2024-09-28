@@ -171,7 +171,15 @@ const Chat: React.FC = () => {
         body: JSON.stringify({
           data: obtainedInfo
         })
-      })
+      }).then(response => response.blob())
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'formularz.xml';
+          document.body.appendChild(a);
+        })
     } catch (error) {
       console.error(error);
     }

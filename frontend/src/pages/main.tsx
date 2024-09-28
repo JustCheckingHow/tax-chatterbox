@@ -11,8 +11,17 @@ const Main: React.FC = () => {
     <Box sx={{ minHeight: '100vh', width: "100%", display: "flex", flexDirection: "column"}}>
       <Nav/>
         <div className="container" style={{paddingTop: "2em", paddingBottom: "2em", flex: 1}}>
-            {/* <Chat/> */}
-            <Link to="/chat">Czat</Link>
+            <div className="gov-banner-products">
+              <div className="gov-banner-products__image">
+                  <img src="./assets/images/local/banner-foto.png" />
+              </div>
+              <div className="gov-banner-products__content">
+                  <h4>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed</h4>
+                  <p>Lorem ipsum dolor sit amet, consectetur ipsum dolor sit amet, consectetur adipiscing elit, sed 
+                  do eiusmod tempot dolore magna aliqua dolore magna aliqua.</p>
+                  <Link to={"/chat"} className="gov-banner-products__cta">Przejdź do czatu</Link>  
+              </div>
+          </div>
         </div>
       <Footer/>
     </Box>
