@@ -5,8 +5,6 @@ services:
     build: ./backend
     ports:
       - "8001:8000"
-    volumes:
-      - ./backend:/app
     env_file:
       - .env
     environment:
@@ -17,7 +15,5 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
     environment:
       - NODE_ENV=development
