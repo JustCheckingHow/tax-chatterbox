@@ -59,10 +59,10 @@ const ChatDocUploader = () => {
                             <li key={index}>
                                 {file.name}<br/>
                                 <div className="gov-progress gov-progress--small">
-                                    <div className="gov-progress__progress-bar" style={{ width: '100%' }}>
+                                    <div className="gov-progress__progress-bar" style={{ width: progress + '%' }}>
                                     </div>
                                 </div>
-                                <div className="gov-progress__label">100%</div>
+                                <div className="gov-progress__label">{String(progress)}%</div>
                             </li>
                         ))}
                     </ul>

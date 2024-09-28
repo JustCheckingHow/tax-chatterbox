@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, ListItem, ListItemText, Divider } from '@mui/material';
+import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
 import Footer from '../../components/Footer/Footer';
@@ -9,7 +9,7 @@ import GridItem from "../../components/GridItem/GridItem.tsx";
 import ChatDocUploader from "../../components/ChatDocUploader/ChatDocUploader.tsx";
 
 import signIcon from "../../assets/icons/sign.svg";
-import chatIcon from "../../assets/icons/czatbot.svg";
+// import chatIcon from "../../assets/icons/czatbot.svg";
 import voiceIcon  from "../../assets/icons/callcenter.svg";
 
 import logo from "../../assets/image/logo.png"
@@ -26,10 +26,6 @@ const Message: React.FC<Message> = ({ message, sender }) => {
   }
   else if (sender === 'system') {
     senderName = '';
-  }
-  let alignment = "left";
-  if (sender === 'user') {
-    alignment = "right";
   }
 
   return (
@@ -58,8 +54,6 @@ const Chat: React.FC = () => {
     "Numer telefonu": "",
     "Wartość przedmiotu": ""
   });
-
-  const chatStarted = true; 
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
