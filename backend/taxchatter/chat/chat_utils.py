@@ -109,6 +109,7 @@ async def verify_if_necessary(message, history):
             {"role": "user", "content": user},
         ]
     )
+    logger.error(res)
 
     return res
 
@@ -134,6 +135,32 @@ async def question_if_necessary(message, history, callback=None):
     )
 
     return res
+
+
+async def compute_tax_rate(message, history):
+    system = "Jesteś AI pomocnikiem podatnika. " "Sprawdź jaka stawka podatku aplikuje się w sytuacji użytkownika"
+
+    user = (
+        f"Oto zasady wyliczania podatku od umów PCC: {RULES}. Oto moja najnowsza wiadomość: `{message}`. "  # noqa: E501
+        "Wytłumacz, która stawka podatku jest zastosowana w sytuacji użytkownika."
+        """Koniecznie odpisz w formacie:
+        {
+            "stawka": "stawka podatku, która się aplikuje",
+            "argument": "wytłumaczenie dlaczego dana stawka się aplikuje"
+        }
+        Nie odbiegaj od powyższego formatu pod żadnym pozorem.
+        """
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            *history,
+            {"role": "user", "content": user},
+        ],
+    )
+    res = res.replace("json", "").replace("```", "").strip()
+    return json.loads(res)
 
 
 async def rationale_why_not_necessary(message, history, callback=None):

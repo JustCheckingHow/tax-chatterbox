@@ -63,7 +63,11 @@ class AIConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"message": res, "command": "basicFlowComplete"}))
             return
 
-        # Send message to AI consumer
+        # Check what tax rate should be applied in the case
+        tax_rate_ans = await chat_utils.compute_tax_rate(message, messages_parsed)
+        required_info.update({"tax_rate": tax_rate_ans["stawka"]})
+        await self.send(text_data=json.dumps({"message": tax_rate_ans["argument"], "command": "basicFlowComplete"}))
+        # # Send message to AI consumer
         answer = await chat_utils.get_ai_response(
             message,
             messages_parsed,
