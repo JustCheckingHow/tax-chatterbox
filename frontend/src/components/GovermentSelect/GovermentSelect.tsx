@@ -19,12 +19,6 @@ const GovermentSelect = () => {
                 ))}
             </select>
 
-            <select name="" id="">
-                {Object.keys(govermentList).map((key) => (
-                    <option value={key}>{key}</option>
-                ))}
-            </select>
-
             <button type="button" className="btn btn-primary"><span>Zatwierdź swój urząd</span></button>
 
         </div>
