@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 import chatIcon from "../../assets/icons/czatbot.svg";
 import knowledgeIcon from "../../assets/icons/bazawiedzy.svg";
+import homeIcon from "../../assets/icons/home.svg";
 
 const Nav: React.FC = () => {
     return (
@@ -14,10 +15,15 @@ const Nav: React.FC = () => {
                     <img src={logo} alt="" />
                     <h1>JustCheckingTax</h1>
                 </Link>
+                <select name="" id="" style={{width: "90px"}}>
+                    <option value="pl">PL </option>
+                    <option value="en">EN </option>
+                    <option value="uk">UK </option>
+                </select>
                 <ul className={styles.nav__ul}>
                     <li>
                         <Link to="/">
-                            <img src={chatIcon} alt="chatIcon" />
+                            <img src={homeIcon} alt="homeIcon" />
                             <p>Strona Główna</p>
                         </Link>
                     </li>

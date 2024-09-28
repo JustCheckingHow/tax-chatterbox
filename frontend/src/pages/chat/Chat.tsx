@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -16,21 +16,12 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
-import useWebSocket from 'react-use-websocket';
 
 
 interface Message {
   message: string;
   sender: 'user' | 'ai' | 'system';
   hidden?: boolean;
-}
-
-function blobToBase64(blob: Blob) {
-  return new Promise((resolve, _) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
 }
 
 
@@ -48,12 +39,12 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   }
 
   return (
-    <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : styles.chat__message__system)}>
+    <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
+      {senderName != '' && <div className={styles.chat__message__author}>
+        {senderName === 'AI' && <img src={logo} alt="logo" />}
+      </div> }
       <div className={styles.chat__message__content}>
         {message}
-      </div>
-      <div className={styles.chat__message__author}>
-        {senderName === 'AI' && <img src={logo} alt="logo" />}
       </div>
     </li>
   )
@@ -65,54 +56,57 @@ const Chat: React.FC = () => {
   const [isNecessary, setIsNecessary] = useState<boolean | "unknown">("unknown");
   const [view, setView] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [requiredInfo, setRequiredInfo] = useState<any>([
-    { "Pesel": { "description": "Numer Pesel", "required": true } },
-    { "P_4": { "description": "Data Dokonania czynności", "required": true } },
-    { "DataZlozeniaDeklaracji": { "description": "Data złożenia deklaracji", "required": false } },
-    { "Imie": { "description": "Imię", "required": true } },
-    { "Nazwisko": { "description": "Nazwisko", "required": true } },
-    { "ImieOjca": { "description": "Imię ojca", "required": true } },
-    { "ImieMatki": { "description": "Imię matki", "required": true } },
-    { "KodKraju": { "description": "Kod kraju", "required": true } },
-    { "Wojewodztwo": { "description": "Województwo", "required": true } },
-    { "Powiat": { "description": "Powiat", "required": true } },
-    { "Gmina": { "description": "Gmina", "required": true } },
-    { "Ulica": { "description": "Ulica", "required": true } },
-    { "NrDomu": { "description": "Numer domu", "required": true } },
-    { "NrLokalu": { "description": "Numer lokalu", "required": true } },
-    { "Miejscowosc": { "description": "Miejscowość", "required": true } },
-    { "KodPocztowy": { "description": "Kod pocztowy", "required": true } },
-    { "P_6": { "description": "Cel złożenia deklaracji", "required": false } },
-    {
-      "P_7": {
-        "description": "Podmiot składający deklarację. 1 - podmioty zobowiązane solidarnie do zapłaty podatku, w przeciwnym wypadku 5",
-        "required": true,
-      }
-    },
-    { "P_20": { "description": "Przedmiot opatkowania 1 - umowa", "required": true } },
-    {
-      "P_21": {
-        "description": "Miejsce położenia rzeczy 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",
-        "required": false,
-      }
-    },
-    {
-      "P_22": {
-        "description": "Miejsce położenia CWC 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",
-        "required": false,
-      }
-    },
-    { "P_23": { "description": "Opis", "required": true } },
-    {
-      "P_26": {
-        "description": "Podstawa opatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)",
-        "required": true,
-      }
-    },
-    { "P_62": { "description": "Liczba dodatkowych załączników", "required": true } },
-  ]);
-
+  const [requiredInfo, setRequiredInfo] = useState<any>([]);
+  const [validatedInfo, setValidatedInfo] = useState<any>(false);
   const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
+  const [closestUrzad, setClosestUrzad] = useState<Array<any>>([]);
+  const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
+  const [xmlFile, setXmlFile] = useState<any>(null);
+  
+  useEffect(() => {
+    try {
+      console.log(validatedInfo);
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/xml_schema`)
+        .then(response => response.json())
+        .then(data => {
+          setRequiredInfo(data.message);
+        })
+    } catch (error) {
+      console.error(error);
+    }
+  }, [])
+
+  useEffect(() => {
+    setValidatedInfo(true);
+    requiredInfo.forEach((info: string) => {
+      if (!obtainedInfo[info]) {
+        setValidatedInfo(false);
+      }
+    })
+  }, [requiredInfo]);
+
+  useEffect(() => {
+    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy) {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/closestUrzad`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          location: `${obtainedInfo.Ulica} ${obtainedInfo.NrDomu} ${obtainedInfo.Miejscowosc} ${obtainedInfo.KodPocztowy}`
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          setClosestUrzad(data.closest);
+          setAllUrzedy(data.all_urzedy);
+        })
+    }
+    if(validatedInfo) {
+      generateXml();
+    }
+  }, [validatedInfo, obtainedInfo]);
+
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
@@ -163,6 +157,26 @@ const Chat: React.FC = () => {
     }
   }, [lastMessage]);
 
+  const updateUrzad = (kod: string) => {
+    setObtainedInfo(info => ({ ...info, UrzadSkarbowy: kod }));
+  }
+
+  const generateXml = () => {
+    try {
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/generate_xml`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          data: obtainedInfo
+        })
+      })
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
       <Nav />
@@ -172,12 +186,6 @@ const Chat: React.FC = () => {
             <div
               className={styles.chat__grid}
             >
-              {/* <GridItem
-                    onClick={() => {}}
-                        icon={chatIcon}
-                        heading={"Opisz swoją sprawę"}
-                        content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
-                    /> */}
               <GridItem
                 onClick={() => { setView("uploadDoc") }}
                 icon={signIcon}
@@ -236,9 +244,9 @@ const Chat: React.FC = () => {
           </form>
         </div>
         <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
+        {!validatedInfo && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+      {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
-      <GovermentSelect />
-      <FinalDocument />
       <Footer />
     </Box>
   );
