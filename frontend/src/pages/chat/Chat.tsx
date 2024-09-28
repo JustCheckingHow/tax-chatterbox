@@ -18,9 +18,14 @@ import Checklist from "../../components/Checklist/Checklist.tsx"
 interface Message {
   message: string;
   sender: 'user' | 'ai' | 'system';
+  hidden?: boolean;
 }
 
-const Message: React.FC<Message> = ({ message, sender }) => {
+const Message: React.FC<Message> = ({ message, sender, hidden }) => {
+  if (hidden) {
+    return null;
+  }
+
   let senderName = 'AI';
   if (sender === 'user') {
     senderName = 'Ty';
@@ -53,7 +58,7 @@ const Chat: React.FC = () => {
     "Adres": "",
     "PESEL": "",
     "Numer telefonu": "",
-    "Wartość przedmiotu": ""
+    "Wartość przedmiotu": "",
   });
 
   const [input, setInput] = useState('');
@@ -134,7 +139,13 @@ const Chat: React.FC = () => {
                     />
                 </div>
             ) : <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <ChatDocUploader/>
+                <ChatDocUploader sendMessage={
+                  (message: string) => {
+                    setMessages(m => [...m, { message: message, sender: 'user', hidden: true }]);
+                    setInput(message);
+                    handleSendMessage();
+                  }
+                }/>
                 <p onClick={() => {setView('')}}>Wróć</p>
               </div>)}
         <ul className={styles.chat__message__container}>
