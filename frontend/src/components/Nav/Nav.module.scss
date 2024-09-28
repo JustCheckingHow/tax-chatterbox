@@ -20,9 +20,15 @@
   }
 
   &__logo{
+    display: flex;
+    align-items: center;
+    gap: 12px;
     h1{
       margin: 0;
       font-size: 1.71875rem;
+    }
+    img{
+      height: 48px;
     }
   }
 }

@@ -1,6 +1,6 @@
-@import "btn";
-@import "input";
-@import "uploader";
+@import "./btn";
+@import "./input";
+@import "./uploader";
 
 $color: #232323;
 
@@ -38,10 +38,6 @@ h3{
 
 a, a:link, a:visited{
     color: #0052a5;
-}
-
-.button{
-
 }
 
 label {
