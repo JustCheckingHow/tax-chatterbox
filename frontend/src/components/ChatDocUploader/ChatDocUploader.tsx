@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import styles from "./ChatDocUploader.module.scss"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -6,11 +6,20 @@ const ChatDocUploader = ({sendMessage}: {sendMessage: (message: any) => void}) =
     const [files, setFiles] = useState<File[]>([]);
     const [progress, setProgress] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = e.target.files;
         if (selectedFiles) {
             setFiles([...selectedFiles]);
+        }
+    };
+
+    const handleButtonClick = () => {
+        if (files.length === 0 && fileInputRef.current) {
+            fileInputRef.current.click();
+        } else {
+            handleUpload();
         }
     };
 
@@ -63,20 +72,22 @@ const ChatDocUploader = ({sendMessage}: {sendMessage: (message: any) => void}) =
                 </div>
                 <div className="gov-file-uploader__input">
                     <input
+                        ref={fileInputRef}
                         name="files"
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         tabIndex={-1}
                         onChange={handleFileChange}
-                        disabled={files.length > 0}
+                        style={{ display: 'none' }}
                     />
                     <p>Przeciągnij i upuść umowę na to pole<br/>
                         albo załaduj z dysku.</p>
                     <button
                         className="btn btn-secondary"
-                        onClick={handleUpload}
+                        onClick={handleButtonClick}
+                        disabled={isLoading}
                     >
-                        <span>Dodaj plik</span>
+                        <span>{isLoading ? "Przetwarzanie..." : (files.length === 0 ? "Wybierz plik" : "Prześlij plik")}</span>
                     </button>
                     <p className="info">Dopuszczalna liczba plików: 1<br/>
                         Dopuszczalne formaty plików: .pdf, .jpg, .png<br/>
