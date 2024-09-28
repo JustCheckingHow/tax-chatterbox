@@ -111,20 +111,20 @@ const Chat: React.FC = () => {
   }, [lastMessage]);
 
   return (
-    <Box sx={{ height: '100vh', width: "100%", display: "flex", flexDirection: "column"}}>
+    <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column"}}>
     <Nav/>
     <div className="container" style={{paddingTop: "2em", paddingBottom: "2em", flex: 1}}>
     <div className={styles.chat__container}>
-    {!chatStarted && (view != "uploadDoc" ? (
+    {messages.length < 2 && (view != "uploadDoc" ? (
                 <div
                     className={styles.chat__grid}
                 >
-                    <GridItem
+                    {/* <GridItem
                     onClick={() => {}}
                         icon={chatIcon}
                         heading={"Opisz swoją sprawę"}
                         content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
-                    />
+                    /> */}
                     <GridItem
                         onClick={() => {setView("uploadDoc")}}
                         icon={signIcon}
@@ -138,7 +138,10 @@ const Chat: React.FC = () => {
                         content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
                     />
                 </div>
-            ) : <ChatDocUploader/>)}
+            ) : <div style={{width: "100%", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <ChatDocUploader/>
+                <p onClick={() => {setView('')}}>Wróć</p>
+              </div>)}
         <ul className={styles.chat__message__container}>
           {messages.map((message, index) => (
             <React.Fragment key={index}>

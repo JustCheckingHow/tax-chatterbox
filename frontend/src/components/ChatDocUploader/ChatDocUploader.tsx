@@ -1,33 +1,34 @@
-// import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {Simulate} from "react-dom/test-utils";
 import progress = Simulate.progress;
+import styles from "./ChatDocUploader.module.scss"
 
 const ChatDocUploader = () => {
-    // const [files, setFiles] = useState<File[]>([]);
+    const [files, setFiles] = useState<File[]>([]);
 
-    // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     const files = e.target.files;
-    //     if (files) {
-    //         setFiles([...files]);
-    //     }
-    // };
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files) {
+            setFiles([...files]);
+        }
+    };
 
-    // const handleUpload = async () => {
-    //     const formData = new FormData();
-    //     files.forEach((file) => {
-    //         formData.append('files', file);
-    //     });
-    //     const response = await fetch('http://localhost:3000/upload', {
-    //         method: 'POST',
-    //         body: formData,
-    //     });
-    //     if (response.ok) {
-    //         console.log('Files uploaded');
-    //     }
-    // };
+    const handleUpload = async () => {
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append('files', file);
+        });
+        const response = await fetch('http://localhost:3000/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+        if (response.ok) {
+            console.log('Files uploaded');
+        }
+    };
 
     return (
-        <form encType="multipart/form-data" noValidate>
+        <form encType="multipart/form-data" className={styles.uploader__container} noValidate>
             <div className="gov-file-uploader ">
                 <div className="gov-file-uploader__header">
                     <h3>Dodaj pliki</h3>
@@ -36,7 +37,7 @@ const ChatDocUploader = () => {
                     <input
                         name="files"
                         type="file"
-                        accept="image/png, image/jpeg, image/jpg"
+                        accept=".pdf,.jpg,.jpeg,.png"
                         tabIndex={-1}
                     />
                     <p>Przeciągnij i upuść pliki na to pole<br/>
@@ -47,8 +48,7 @@ const ChatDocUploader = () => {
                         <span>Dodaj plik</span>
                     </button>
                     <p className="info">Dopuszczalna liczba plików: 1<br/>
-                        Dopuszczalne formaty plików: .jpg, .png, .pdf ,
-                        .doc, .zip, .rar<br/>
+                        Dopuszczalne formaty plików: .pdf, .jpg, .png<br/>
                         Maksymalny rozmiar 500 kb</p>
                 </div>
                 <div className="gov-file-uploader__files-list">
