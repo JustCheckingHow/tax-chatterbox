@@ -54,7 +54,6 @@ class AIConsumer(AsyncWebsocketConsumer):
         obtained_info = text_data_json["obtained_info"]
         messages = text_data_json["history"]
         is_necessary = text_data_json["is_necessary"]
-
         messages_parsed = self.parse_messages_history(messages)
 
         intent = await chat_utils.recognize_question(message, messages_parsed)
@@ -99,6 +98,12 @@ class AIConsumer(AsyncWebsocketConsumer):
             )
             return
 
+        # Check what tax rate should be applied in the case
+        if "stawka_podatku" not in required_info:
+            tax_rate_ans = await chat_utils.compute_tax_rate(message, messages_parsed)
+            required_info.update({"tax_rate": tax_rate_ans["stawka"]})
+            await self.send(text_data=json.dumps({"message": tax_rate_ans["argument"], "command": "basicFlowComplete"}))
+        # # Send message to AI consumer
         # Send message to AI consumer
         await self.send_on_the_fly(
             chat_utils.get_ai_response,

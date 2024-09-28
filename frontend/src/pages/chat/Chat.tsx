@@ -45,13 +45,9 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
       <div className={styles.chat__message__content}>
         {message}
       </div>
-<<<<<<< HEAD
-      
-=======
       <div className={styles.chat__message__author}>
         {senderName === 'AI' && <img src={logo} alt="logo" />}
       </div>
->>>>>>> e80417008fd599243d15d930a1e7bb17fc696813
     </li>
   )
 }
@@ -62,7 +58,7 @@ const Chat: React.FC = () => {
   const [isNecessary, setIsNecessary] = useState<boolean | "unknown">("unknown");
   const [view, setView] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [requiredInfo, setRequiredInfo] = useState<any>([
+  const [requiredInfo, _] = useState<any>([
     { "Pesel": { "description": "Numer Pesel", "required": true } },
     { "P_4": { "description": "Data Dokonania czynności", "required": true } },
     { "DataZlozeniaDeklaracji": { "description": "Data złożenia deklaracji", "required": false } },

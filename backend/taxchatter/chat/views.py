@@ -7,6 +7,7 @@ from rest_framework.response import HttpResponse, Response
 from rest_framework.views import APIView
 from xml_generator import generate_xml, required_fields, validate_user_data
 
+from .address_verification import GMAPS, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
 
 
@@ -72,3 +73,18 @@ class GenerateXmlView(APIView):
 
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LocationView(APIView):
+    def post(self, request):
+        user_location = request.data.get("location")
+        # Here you can process the location
+
+        top3_closest = get_closest_urzad(GMAPS, user_location)
+        return Response(
+            {
+                "message": "Location processed successfully",
+                "closest": top3_closest,
+                "user_location": user_location,
+            }
+        )
