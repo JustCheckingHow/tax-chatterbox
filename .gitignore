@@ -8,3 +8,4 @@
 **/logs
 **/tmp
 **/static
+***/.ruff_cache

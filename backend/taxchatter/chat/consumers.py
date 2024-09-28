@@ -1,6 +1,8 @@
 import json
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 from loguru import logger
+
 from . import chat_utils
 
 
