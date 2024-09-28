@@ -1,5 +1,4 @@
 import json
-import os
 
 from loguru import logger
 from openai import AsyncOpenAI
@@ -10,12 +9,13 @@ from .llm_prompts.bielik import RULES
 async def _get_ai_response(messages, callback=None):
     logger.info(f"Messages: {messages}")
     client = AsyncOpenAI(
-        base_url=os.environ["RUNPOD_BIELIK_URL"] + "/v1",
-        api_key=os.environ["RUNPOD_API_KEY"],
+        # base_url=os.environ["RUNPOD_BIELIK_URL"] + "/v1",
+        # api_key=os.environ["RUNPOD_API_KEY"],
     )
     if callback:
         stream = await client.chat.completions.create(
-            model="speakleash/Bielik-11B-v2.3-Instruct",
+            # model="speakleash/Bielik-11B-v2.3-Instruct",
+            model="gpt-4o-2024-08-06",
             stream=True,
             messages=messages,
             temperature=0.0,
@@ -28,7 +28,8 @@ async def _get_ai_response(messages, callback=None):
         return msg
     else:
         res = await client.chat.completions.create(
-            model="speakleash/Bielik-11B-v2.3-Instruct",
+            # model="speakleash/Bielik-11B-v2.3-Instruct",
+            model="gpt-4o-2024-08-06",
             messages=messages,
             temperature=0.0,
         )
@@ -54,7 +55,7 @@ async def get_ai_response(message, history, required_info, callback=None):
     )
 
 
-async def parse_info(message, required_info) -> dict:
+async def parse_info(message, history, required_info) -> dict:
     system = (
         "Jesteś AI pomocnikiem podatnika. Zbierz informacje, które są potrzebne do wypełnienia wniosku. "
         "Odpowiadaj tylko i wyłącznie po polsku."
@@ -66,7 +67,12 @@ async def parse_info(message, required_info) -> dict:
         + ". Nie pytaj o nic więcej. "
         "Z wypowiedzi użytkownika wyciągnij podane informacje i wypisz je w formacie JSON. Odpowiadaj tylko i wyłącznie po polsku. "  # noqa: E501
         'Odpowiedz tylko w formacie JSON: {"nazwa_informacji": "wartość", "nazwa_informacji2": "wartość2"}. Jeżeli user nie podał żadnych informacji, zwróć pusty słownik: {}. \n'  # noqa: E501
-        "Oto wypowiedź użytkownika: ```\n" + message + "\n```"
+        "Oto historia rozmowy: \n"
+        + str("\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]))
+        + "\n- user: "
+        + message
+        + "\n"
+        "Wyciągnij tylko informacje z ostatniej wiadomości użytkownika."
     )
 
     res = await _get_ai_response(
@@ -125,6 +131,29 @@ async def question_if_necessary(message, history, callback=None):
             {"role": "user", "content": user},
         ],
         callback,
+    )
+
+    return res
+
+
+async def rationale_why_not_necessary(message, history, callback=None):
+    system = (
+        "Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek PCC-3. "
+        "Odpowiadaj tylko i wyłącznie po polsku."
+    )
+
+    user = (
+        f"Oto zasady kiedy trzeba, a kiedy nie trzeba wypełniać wniosku: {RULES}. Oto moja najnowsza wiadomość: `{message}`. "  # noqa: E501
+        "Wytłumacz mi dlaczego nie muszę wypełniać wniosku."
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            *history,
+            {"role": "user", "content": user},
+        ],
+        callback=callback,
     )
 
     return res
