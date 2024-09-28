@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .address_verification import GMAPS, get_closest_urzad
+from .address_verification import GMAPS, all_urzedy, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
 from .xml_generator import generate_xml, required_fields, validate_json
 
@@ -51,7 +51,10 @@ class ValidateUserDataView(APIView):
         data = request.data
         try:
             validate_json(data)
-            return Response({"message": "User data validated successfully", "data": data}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "User data validated successfully", "data": data},
+                status=status.HTTP_200_OK,
+            )
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -86,5 +89,6 @@ class LocationView(APIView):
                 "message": "Location processed successfully",
                 "closest": top3_closest,
                 "user_location": user_location,
+                "all_urzedy": all_urzedy,
             }
         )

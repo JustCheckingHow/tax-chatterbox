@@ -5,7 +5,8 @@ import docsIcon from "../../assets/icons/docs.svg";
 import knowledgeIcon from "../../assets/icons/bazawiedzy.svg";
 import { Link } from "react-router-dom";
 
-const FinalDocument = () => {
+const FinalDocument = (props: any) => {
+    console.log(props.xmlFile);
     return (
         <div className={styles.finalDocument + " box"}>
             <h3 style={{textAlign: "center"}}>Twój dokument PCC-3 jest gotowy!</h3> 
