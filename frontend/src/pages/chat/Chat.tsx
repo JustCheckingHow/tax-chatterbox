@@ -35,16 +35,15 @@ const Message: React.FC<Message> = ({ message, sender }) => {
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([{ message: "Witaj! Jak mogę Ci pomóc?", sender: 'ai' }]);
   const [newestMessage, setNewestMessage] = useState<Message | null>(null);
+  const [isNecessary, setIsNecessary] = useState<boolean | "unknown">("unknown");
   const [requiredInfo, setRequiredInfo] = useState<{ [key: string]: string }>({
+    // PCC-3
     "Imię": "",
     "Nazwisko": "",
     "Adres": "",
     "PESEL": "",
     "Numer telefonu": "",
-    "Email": "",
-    "Rodzaj dochodu": "",
-    "Wysokość dochodu": "",
-    "Wysokość podatku": "",
+    "Wartość przedmiotu": ""
   });
 
   const [input, setInput] = useState('');
@@ -52,7 +51,7 @@ const Chat: React.FC = () => {
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo }));
+      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo, history: messages, is_necessary: isNecessary }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
@@ -73,10 +72,16 @@ const Chat: React.FC = () => {
       }
       else if (lastMessageData.command === 'informationParsed') {
         const newestInfo = lastMessageData.message as Record<string, string>;
-        const nonEmpty = Object.fromEntries(Object.entries(newestInfo).filter(([, v]) => v.trim() !== ''));
-        const msg = `Nowe informacje. ${Object.entries(nonEmpty).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
+        const nonEmpty = Object.fromEntries(Object.entries(newestInfo).filter(([, v]) => v !== ''));
         setRequiredInfo(info => ({ ...info, ...nonEmpty }));
-        setMessages(m => [...m, { message: msg, sender: 'system' }]);
+
+        if (Object.keys(nonEmpty).length > 0) {
+          const msg = `Nowe informacje. ${Object.entries(nonEmpty).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
+          setMessages(m => [...m, { message: msg, sender: 'system' }]);
+        }
+      }
+      else if (lastMessageData.command === 'isNecessary') {
+        setIsNecessary(lastMessageData.message as boolean);
       }
     }
   }, [lastMessage]);
