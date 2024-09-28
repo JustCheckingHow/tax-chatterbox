@@ -2,7 +2,8 @@ channels==4.0.0
 daphne==4.0.0
 Django==5.1.1
 djangorestframework==3.14.0
-openai==1.50.2
 loguru==0.7.2
+openai==1.50.2
+pdf2image==1.17.0
 python-dotenv==1.0.0
 websockets==11.0.3

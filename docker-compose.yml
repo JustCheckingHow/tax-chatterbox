@@ -8,7 +8,8 @@ services:
     environment:
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
+    env_file:
+      - .env
   frontend:
     build: ./frontend
     ports:
