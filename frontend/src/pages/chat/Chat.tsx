@@ -13,6 +13,7 @@ import signIcon from "../../assets/icons/sign.svg";
 import voiceIcon  from "../../assets/icons/callcenter.svg";
 
 import logo from "../../assets/image/logo.png"
+import Checklist from "../../components/Checklist/Checklist.tsx"
 
 interface Message {
   message: string;
@@ -165,10 +166,11 @@ const Chat: React.FC = () => {
           </button>
         </form>
       </div>
-    </div>
+      <Checklist required_info={requiredInfo} />
+      </div>
     <Footer/>
     </Box>
-  );
+  );  
 };
 
 export default Chat;
