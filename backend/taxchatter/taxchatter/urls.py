@@ -24,4 +24,5 @@ urlpatterns = [
     path("chat", chat_views.chat_page, name="chat"),
     path("api/chat", chat_views.ChatAPIView.as_view(), name="chat_api"),
     path("api/upload", chat_views.FileUploadView.as_view(), name="upload"),
+    path("api/closestUrzad", chat_views.LocationView.as_view(), name="closest_urzad"),
 ]

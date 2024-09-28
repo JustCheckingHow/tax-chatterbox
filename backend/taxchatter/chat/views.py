@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .address_verification import GMAPS, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
 
 
@@ -36,3 +37,18 @@ class FileUploadView(APIView):
             return Response({"message": "File uploaded successfully", "responses": responses})
 
         return Response({"message": "File uploaded successfully"}, status=status.HTTP_200_OK)
+
+
+class LocationView(APIView):
+    def post(self, request):
+        user_location = request.data.get("location")
+        # Here you can process the location
+
+        top3_closest = get_closest_urzad(GMAPS, user_location)
+        return Response(
+            {
+                "message": "Location processed successfully",
+                "closest": top3_closest,
+                "user_location": user_location,
+            }
+        )
