@@ -47,8 +47,6 @@ const ChatDocUploader = ({sendMessage}: {sendMessage: (message: string) => void}
                         is_necessary: "unknown"
                     });
                     sendMessage(message);
-                    console.log("Wysłałem wiadomość");
-                    console.log(message);
                 }
                 setProgress(100);
             } else {

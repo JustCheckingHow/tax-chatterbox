@@ -37,13 +37,14 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   }
 
   return (
-    <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : styles.chat__message__system)}>
+    <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
+      {senderName != '' && <div className={styles.chat__message__author}>
+        {senderName === 'AI' && <img src={logo} alt="logo" />}
+      </div> }
       <div className={styles.chat__message__content}>
         {message}
       </div>
-      <div className={styles.chat__message__author}>
-        {senderName === 'AI' && <img src={logo} alt="logo" />}
-      </div> 
+      
     </li>
   )
 }
