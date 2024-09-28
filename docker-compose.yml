@@ -4,7 +4,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8001:8000"
+      - "8000:8000"
     volumes:
       - ./backend:/app
     env_file:
@@ -12,8 +12,7 @@ services:
     environment:
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,api.justcheckinghow.com
-    env_file:
-      - .env
+
   frontend:
     build: ./frontend
     ports:
