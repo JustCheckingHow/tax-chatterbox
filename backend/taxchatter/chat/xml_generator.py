@@ -56,8 +56,8 @@ inny podmiot",
 def validate_json(json_data):
     # transaction_date
     pesel = validate_pesel(json_data.get("Pesel"))
-    P_4 = parse_validate_transaction_date(json_data.get("P_4"))
     declaration_date = parse_validate_declaration_date(json_data.get("DataZlozeniaDeklaracji", datetime.datetime.now()))
+    P_4 = parse_validate_transaction_date(json_data.get("P_4"), declaration_date)
     imie = json_data.get("Imie")
     nazwisko = json_data.get("Nazwisko")
     data_urodzenia = get_data_urodzenia(pesel)
@@ -80,7 +80,7 @@ def validate_json(json_data):
     P_22 = parse_validate_P22(json_data.get("P_22", "0"))
     P_23 = parse_validate_P23(json_data.get("P_23"))
     P_26 = parse_validate_P26(json_data.get("P_26"))
-    P_62 = parse_validate_P62(json_data.get("P_62"))
+    P_62 = parse_validate_P62(json_data.get("P_62", "0"), P_7)
 
     return {
         "pesel": pesel,
@@ -354,25 +354,25 @@ def generate_xml(json_schema):
 
 
 if __name__ == "__main__":
-    generate_xml(
+    name = generate_xml(
         {
-            "pesel": "86072926288",
-            "transaction_date": "2024-09-18",
-            "declaration_date": "2024-09-19",
-            "imie": "Jan",
-            "nazwisko": "Kowalski",
-            "data_urodzenia": "1986-07-29",
-            "imie_ojca": "Jan",
-            "imie_matki": "Maria",
-            "kod_kraju": "PL",
-            "wojewodztwo": "Mazowieckie",
-            "powiat": "Mazowiecki",
-            "gmina": "Mazowiecka",
-            "ulica": "Mazowiecka",
-            "nr_domu": "1",
-            "nr_lokalu": "1",
-            "miejscowosc": "Mazowiecka",
-            "kod_pocztowy": "05-001",
+            "Pesel": "86072926288",
+            "P_4": "2024-09-18",
+            "DataZlozeniaDeklaracji": "2024-09-19",
+            "Imie": "Jan",
+            "Nazwisko": "Kowalski",
+            "DataUrodzenia": "1986-07-29",
+            "ImieOjca": "Jan",
+            "ImieMatki": "Maria",
+            "KodKraju": "PL",
+            "Wojewodztwo": "Mazowieckie",
+            "Powiat": "Makowski",
+            "Gmina": "Krasnosielc",
+            "Ulica": "Mazowiecka",
+            "NrDomu": "1",
+            "NrLokalu": "1",
+            "Miejscowosc": "Mazowiecka",
+            "KodPocztowy": "05-001",
             "P_6": "1",
             "P_7": "1",
             "P_20": "1",
@@ -383,3 +383,6 @@ if __name__ == "__main__":
             "P_62": "1",
         }
     )
+
+    with open(name) as file:
+        print(file.read())

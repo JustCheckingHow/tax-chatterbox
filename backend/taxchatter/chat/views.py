@@ -3,12 +3,12 @@ import tempfile
 
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.response import HttpResponse, Response
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from xml_generator import generate_xml, required_fields, validate_user_data
 
 from .address_verification import GMAPS, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
+from .xml_generator import generate_xml, required_fields, validate_json
 
 
 def chat_page(request):
@@ -50,7 +50,7 @@ class ValidateUserDataView(APIView):
     def post(self, request):
         data = request.data
         try:
-            validate_user_data(data)
+            validate_json(data)
             return Response({"message": "User data validated successfully", "data": data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -66,7 +66,7 @@ class GenerateXmlView(APIView):
             temp_file_name = generate_xml(data)
 
             with open(temp_file_name) as f:
-                response = HttpResponse(f.read(), content_type="application/xml")
+                response = Response(f.read(), content_type="application/xml")
                 response["Content-Disposition"] = 'attachment; filename="deklaracja.xml"'
                 os.remove(temp_file_name)
                 return response
