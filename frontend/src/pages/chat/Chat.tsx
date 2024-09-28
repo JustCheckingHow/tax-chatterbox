@@ -96,7 +96,16 @@ const Chat: React.FC = () => {
         }
       }
       else if (lastMessageData.command === 'isNecessary') {
-        setIsNecessary(lastMessageData.message as boolean);
+        console.log(lastMessageData.message);
+        if (lastMessageData.message === "nie wiem") {
+          setIsNecessary("unknown");
+        }
+        else if (lastMessageData.message === "nie musi") {
+          setIsNecessary(false);
+        }
+        else {
+          setIsNecessary(true);
+        }
       }
     }
   }, [lastMessage]);
