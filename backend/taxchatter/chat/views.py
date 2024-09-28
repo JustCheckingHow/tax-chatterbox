@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .llm_prompts.qwen import extract_pdf
+from .llm_prompts.qwen import ocr_pdf
 
 
 def chat_page(request):
@@ -31,7 +31,7 @@ class FileUploadView(APIView):
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             for chunk in file.chunks():
                 temp_file.write(chunk)
-            responses = extract_pdf(temp_file.name)
+            responses = ocr_pdf(temp_file.name)
 
             return Response({"message": "File uploaded successfully", "responses": responses})
 
