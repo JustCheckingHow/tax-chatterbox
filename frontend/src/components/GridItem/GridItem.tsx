@@ -1,16 +1,23 @@
 import styles from "./GridItem.module.scss"
 
-const GridItem = (props) => {
+interface GridItemProps {
+    onClick: () => void;
+    heading: string;
+    content: string;
+    icon: string;
+}
+
+const GridItem = ({ onClick, icon, heading, content }: GridItemProps) => {
     return (
-        <div onClick={props.onClick} className={styles.gridItem__wrapper}>
+        <div onClick={onClick} className={styles.gridItem__wrapper}>
             <header className={styles.gridItem__header}>
                 <div className={styles.gridItem__icon}>
-                    <img src={props.icon} alt={props.heading}/>
+                    <img src={icon} alt={heading}/>
                 </div>
-                <span>{props.heading}</span>
+                <span>{heading}</span>
             </header>
             <div className={styles.gridItem__content}>
-                <p>{props.content}</p>
+                <p>{content}</p>
             </div>
         </div>
     )
