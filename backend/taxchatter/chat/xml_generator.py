@@ -1345,7 +1345,8 @@ def generate_xml(json_schema):
     kod_formularza.text = "PCC-3"
     if parsed_json.get("stawka_podatku") is not None and parsed_json.get("P_26") is not None:
         # P_26 -- podstawa opodatkowania
-        parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
+        for f in ("27", "46", "53"):
+            parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
 
     ET.SubElement(naglowek, "WariantFormularza").text = "6"
     ET.SubElement(naglowek, "CelZlozenia", poz="P_6").text = str(parsed_json.get("declaration_purpose", 1))
