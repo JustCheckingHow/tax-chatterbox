@@ -1,9 +1,11 @@
 import base64
 import os
 import tempfile
-from datetime import timedelta
 import uuid
+from datetime import timedelta
+from io import BytesIO
 
+import qrcode
 from django.db.models import Count
 from django.db.models.functions import TruncHour
 from django.shortcuts import render
@@ -13,20 +15,16 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .address_verification import GMAPS, all_urzedy, get_closest_urzad
-from .llm_prompts.qwen import ocr_pdf, submit_image, get_ocr_chat_messages
 from .address_verification import (
     GMAPS,
     all_urzedy,
     get_closest_urzad,
     parse_address_components,
 )
-from .llm_prompts.qwen import ocr_pdf
+from .llm_prompts.qwen import get_ocr_chat_messages, ocr_pdf, submit_image
 from .models import Conversation, Intent, Message
-from .xml_generator import PCC3_6_Schema, Sdz2_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
+from .xml_generator import PCC3_6_Schema, SDZ2_6_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
 
-import qrcode
-from io import BytesIO
 
 def chat_page(request):
     return render(request, "chat/chat.html")
@@ -97,7 +95,7 @@ class XmlSchemaView(APIView):
 class XmlSchemaSdzView(APIView):
     def get(self, request):
         return Response(
-            {"message": Sdz2_Schema.get_schema()}, status=status.HTTP_200_OK
+            {"message": SDZ2_6_Schema.get_schema()}, status=status.HTTP_200_OK
         )
 
 
