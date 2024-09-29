@@ -14,16 +14,6 @@ LANG_MAP = {
 
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        query_string = self.scope["query_string"].decode()
-        if query_string:
-            logger.info(f"Query string: {query_string}")
-            query_params = dict(param.split("=") for param in query_string.split("&"))
-
-            # Example: Access a specific query parameter
-            self.lang = query_params.get("lang", "pl").lower()
-        else:
-            self.lang = "pl"
-
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -80,9 +70,10 @@ class AIConsumer(AsyncWebsocketConsumer):
         obtained_info = text_data_json["obtained_info"]
         messages = text_data_json["history"]
         is_necessary = text_data_json["is_necessary"]
+        language = text_data_json["language"]
         messages_parsed = self.parse_messages_history(messages)
 
-        intent = await chat_utils.recognize_question(message, messages_parsed, language_setting=LANG_MAP[self.lang])
+        intent = await chat_utils.recognize_question(message, messages_parsed, language_setting=LANG_MAP[language])
         logger.info(f"Intent: {intent}")
         if intent == "inne":
             await self.send_on_the_fly(
@@ -91,7 +82,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 messages_parsed,
                 "basicFlowPartial",
                 "basicFlowComplete",
-                language_setting=LANG_MAP[self.lang],
+                language_setting=LANG_MAP[language],
             )
             return
         elif intent == "pytanie":
@@ -101,7 +92,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 messages_parsed,
                 "basicFlowPartial",
                 "basicFlowComplete",
-                language_setting=LANG_MAP[self.lang],
+                language_setting=LANG_MAP[language],
             )
             return
 
@@ -110,7 +101,7 @@ class AIConsumer(AsyncWebsocketConsumer):
             message,
             messages_parsed,
             required_info,
-            language_setting=LANG_MAP[self.lang],
+            language_setting=LANG_MAP[language],
         )
         # Remove unchanged values
         answer = {k: v for k, v in answer.items() if str(v).strip() != str(obtained_info.get(k, None)).strip()}
@@ -118,7 +109,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
 
         # Check whether the form is even necessary
-        answer = await chat_utils.verify_if_necessary(message, messages_parsed, language_setting=LANG_MAP[self.lang])
+        answer = await chat_utils.verify_if_necessary(message, messages_parsed, language_setting=LANG_MAP[language])
         if is_necessary == "unknown" or answer == "nie wiem":
             logger.info(f"AI response: {answer}")
             await self.send(text_data=json.dumps({"message": answer, "command": "isNecessary"}))
@@ -129,7 +120,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 messages_parsed,
                 "basicFlowPartial",
                 "basicFlowComplete",
-                language_setting=LANG_MAP[self.lang],
+                language_setting=LANG_MAP[language],
             )
             return
 
@@ -141,14 +132,14 @@ class AIConsumer(AsyncWebsocketConsumer):
                 messages_parsed,
                 "basicFlowPartial",
                 "basicFlowComplete",
-                language_setting=LANG_MAP[self.lang],
+                language_setting=LANG_MAP[language],
             )
             return
 
         # Check what tax rate should be applied in the case
         if "stawka_podatku" not in obtained_info:
             tax_rate_ans = await chat_utils.compute_tax_rate(
-                message, messages_parsed, language_setting=LANG_MAP[self.lang]
+                message, messages_parsed, language_setting=LANG_MAP[language]
             )
             logger.info(f"Tax rate answer: {tax_rate_ans}")
             obtained_info.update({"StawkaPodatku": tax_rate_ans["stawka"]})
@@ -160,7 +151,6 @@ class AIConsumer(AsyncWebsocketConsumer):
                     }
                 )
             )
-
         # Send message to AI consumer
         await self.send_on_the_fly(
             chat_utils.get_ai_response,
@@ -170,5 +160,5 @@ class AIConsumer(AsyncWebsocketConsumer):
             "basicFlowComplete",
             required_info=required_info,
             obtained_info=obtained_info,
-            language_setting=LANG_MAP[self.lang],
+            language_setting=LANG_MAP[language],
         )

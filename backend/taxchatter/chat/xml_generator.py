@@ -4,7 +4,15 @@ import xml.etree.ElementTree as ET
 
 
 class OsobaFizyczna:
-    def __init__(self, pesel=None, imie=None, nazwisko=None, data_urodzenia=None, imie_ojca=None, imie_matki=None):
+    def __init__(
+        self,
+        pesel=None,
+        imie=None,
+        nazwisko=None,
+        data_urodzenia=None,
+        imie_ojca=None,
+        imie_matki=None,
+    ):
         self.pesel = pesel
         self.imie = imie
         self.nazwisko = nazwisko
@@ -263,6 +271,7 @@ class PCC3_6_Schema:
         P_23,
         P_26,
         P_62,
+        stawka_podatku=2,  # 2% default
     ):
         self.declaration_date = declaration_date
         self.transaction_date = transaction_date
@@ -277,6 +286,7 @@ class PCC3_6_Schema:
         self.P_23 = P_23
         self.P_26 = P_26
         self.P_62 = P_62
+        self.stawka_podatku = stawka_podatku
 
     def get_schema():
         return [
@@ -307,6 +317,7 @@ class PCC3_6_Schema:
                     "required": True,
                     "type": "string",
                     "pattern": "^[0-9]{4}$",
+                    "visible": False,
                 }
             },
             {
@@ -354,7 +365,7 @@ class PCC3_6_Schema:
                     "pattern": "^[0-9]{1}$",
                 }
             },
-            {"P_23": {"description": "Opis", "required": True, "type": "string"}},
+            {"P_23": {"description": "Opis", "label": "Opis", "required": True, "type": "string"}},
             {
                 "P_26": {
                     "description": "Podstawa opatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)",  # noqa: E501
@@ -364,7 +375,15 @@ class PCC3_6_Schema:
                     "minimum": 1000,
                 }
             },
-            {"P_62": {"description": "Liczba osób", "required": True, "type": "string", "pattern": "^[0-9]{1,3}$"}},
+            {
+                "P_62": {
+                    "description": "Liczba osób",
+                    "label": "Liczba osób",
+                    "required": True,
+                    "type": "string",
+                    "pattern": "^[0-9]{1,3}$",
+                }
+            },
         ]
 
     def parse_validate(self):
@@ -378,6 +397,7 @@ class PCC3_6_Schema:
         self.P_22 = self.parse_validate_P22()
         self.P_26 = self.parse_validate_P26()
         self.P_62 = self.parse_validate_P62()
+        self.stawka_podatku = self.parse_stawka_podatku()
 
         return {
             "transaction_date": self.transaction_date,
@@ -391,7 +411,19 @@ class PCC3_6_Schema:
             "P_23": self.P_23,
             "P_26": self.P_26,
             "P_62": self.P_62,
+            "stawka_podatku": self.stawka_podatku,
         }
+
+    def parse_stawka_podatku(self):
+        try:
+            self.stawka_podatku = float(self.stawka_podatku)
+        except ValueError as err:
+            raise ValueError("Invalid tax rate") from err
+
+        accepted_values = (1, 2, 0.1, 0.5, 0.2)
+        if self.stawka_podatku not in accepted_values:
+            raise ValueError(f"Invalid tax rate (must be im {accepted_values})")
+        return self.stawka_podatku
 
     def parse_validate_transaction_date(
         self,
@@ -524,6 +556,7 @@ class SDZ2_6_Schema:
         # P_45 - obliczony należny podatek od czynności cywilnoprawnej (po zaokrągleniu do pełnych złotych)
         self.P_45 = P_45
 
+        # P_46 - kwota należnego podatku
         self.P_46 = P_46
         # P_47 - typ spółki: 1 - spółka osobowa, 2 - spółka kapitałowa
         self.P_47 = P_47
@@ -548,26 +581,133 @@ class SDZ2_6_Schema:
         self.P_52 = P_52
         # P_80 -ułamek do jakiegoś tam
         self.P_80 = P_80
-        # P_81 - kwota podatku do zapłaty
+        # P_81 - Miejsce nabycia środków
         self.P_81 = P_81
-        # P_82 - kwota podatku do zapłaty
+        # P_82 - wartość rynkowa
         self.P_82 = P_82
-
+        # P_87 - wartość rynkowa ta sama jak w P_82
         self.P_87 = P_87
 
+        # P_88 - stosunek pokrewieństwa
+        # 1 - małżonkowie,
+        # 2 - zstępny,
+        # 3 - wstępny,
+        # 4 - rodzeństwo,
+        # 5 - pasierb,
+        # 6 - ojczym,
+        # 7 - macocha
         self.P_88 = P_88
+
+        # sposób przekazania pieniędzy
+
+        # P_89 - rachunek bankowy
         self.P_89 = P_89
+        # P_90 - rachunek SKOK
         self.P_90 = P_90
+        # P_91 - rachunek inny niz w banku lub SKOK
         self.P_91 = P_91
+        # P_92 - przekaz pocztowy
         self.P_92 = P_92
 
+    def parse_validate_P4(self):
+        try:
+            self.P4 = datetime.datetime.strptime(self.P4, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Invalid declaration date")  # noqa: B904
 
-def required_fields_pcc3():
-    return [
-        *OsobaFizyczna.get_schema(),
-        *AdresZamieszkania.get_schema(),
-        *PCC3_6_Schema.get_schema(),
-    ]
+        return self.P4
+
+    def parse_validate_P40(self):
+        try:
+            self.P_40 = float(self.P_40)
+        except ValueError:
+            raise ValueError("Invalid taxation base")  # noqa: B904
+
+        return round(self.P_40, 0)
+
+    def parse_validate_P47(self):
+        accepted_values = [1, 2]
+
+        try:
+            self.P_47 = int(self.P_47)
+        except ValueError:
+            raise ValueError("Invalid company type")  # noqa: B904
+
+        if self.P_47 in accepted_values:
+            return self.P_47
+        raise ValueError("Invalid company type (must be 1 or 2)")
+
+    def parse_validate_P48(self):
+        accepted_values = [1, 2, 3, 4, 5, 6, 7, 8]
+
+        try:
+            self.P_48 = int(self.P_48)
+        except ValueError:
+            raise ValueError("Invalid taxation base")  # noqa: B904
+
+        if self.P_48 in accepted_values:
+            return self.P_48
+        raise ValueError("Invalid taxation base (must be 1, 2, 3, 4, 5, 6, 7 or 8)")
+
+    def parse_validate_P49(self):
+        try:
+            self.P_49 = float(self.P_49)
+        except ValueError:
+            raise ValueError("Invalid taxation base")  # noqa: B904
+
+        return round(self.P_49, 0)
+
+    def parse_validate_P50(self):
+        try:
+            self.P_50 = float(self.P_50)
+        except ValueError:
+            raise ValueError("Invalid taxation base")  # noqa: B904
+
+        return round(self.P_50, 0)
+
+    def parse_validate_P51(self):
+        try:
+            self.P_51 = float(self.P_51)
+        except ValueError:
+            raise ValueError("Invalid taxation base")  # noqa: B904
+
+        return round(self.P_51, 0)
+
+    def parse_validate_P52(self):
+        try:
+            self.P_52 = float(self.P_52)
+        except ValueError:
+            raise ValueError("Invalid taxation base")  # noqa: B904
+
+        return round(self.P_52, 0)
+
+    def parse_validate_P80(self):
+        # ulamek w formacie 1/3
+
+        try:
+            self.P_80 = self.P_80.split("/")
+            self.P_80 = [int(self.P_80[0]), int(self.P_80[1])]
+        except ValueError:
+            raise ValueError("Invalid fraction")  # noqa: B904
+
+        if self.P_80[0] < 1 or self.P_80[1] < 1:
+            raise ValueError("Invalid fraction (must be greater than 0)")
+
+        return self.P_80[0] / self.P_80[1]
+
+    def parse_validate_P81(self):
+        return self.P_81
+
+    def parse_validate_P82(self):
+        try:
+            self.P_82 = float(self.P_82)
+        except ValueError:
+            raise ValueError("Invalid market value")  # noqa: B904
+
+        return self.P_82
+
+    def parse_validate_P87(self):
+        return self.P_87
 
 
 def validate_json_pcc3(json_data):
@@ -606,6 +746,7 @@ def validate_json_pcc3(json_data):
         P_23=json_data.get("P_23"),
         P_26=json_data.get("P_26"),
         P_62=json_data.get("P_62"),
+        stawka_podatku=json_data.get("stawka_podatku"),
     ).parse_validate()
 
     out = {}
@@ -689,6 +830,10 @@ def generate_xml(json_schema):
         wersjaSchemy="1-0E",
     )
     kod_formularza.text = "PCC-3"
+    for f in ("27", "46", "53"):
+        # P_26 -- podstawa opodatkowania
+        parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
+
     ET.SubElement(naglowek, "WariantFormularza").text = "6"
     ET.SubElement(naglowek, "CelZlozenia", poz="P_6").text = str(parsed_json.get("declaration_purpose"))
     ET.SubElement(naglowek, "Data", poz="P_4").text = parsed_json.get("transaction_date").strftime("%Y-%m-%d")
@@ -748,7 +893,6 @@ def generate_xml(json_schema):
 
     # Tworzenie drzewa XML
     tree = ET.ElementTree(deklaracja)
-
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xml") as temp_file:
         tree.write(temp_file.name, encoding="utf-8", xml_declaration=True)
         return temp_file.name
@@ -783,8 +927,9 @@ if __name__ == "__main__":
             "P_26": "1000",
             "P_62": "1",
             "KodUrzedu": "1234",
+            "stawka_podatku": 2,
         }
     )
-
+    print(name)
     with open(name) as file:
         print(file.read())

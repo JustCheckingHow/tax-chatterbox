@@ -2,6 +2,8 @@ import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } 
 import Main from './pages/main'
 import "./assets/styles/global.scss"
 import Chat from './pages/chat'
+import { LanguageProvider } from './context/languageProvider'
+
 
 function App() {
   const router = createBrowserRouter(
@@ -13,7 +15,11 @@ function App() {
     )
   )
   
-  return <RouterProvider router={router} />
+  return (
+    <LanguageProvider>
+      <RouterProvider router={router} />
+    </LanguageProvider>
+  )
 }
 
 export default App
