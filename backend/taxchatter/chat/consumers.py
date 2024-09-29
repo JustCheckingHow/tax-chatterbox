@@ -23,7 +23,14 @@ class AIConsumer(AsyncWebsocketConsumer):
         return messages_parsed
 
     async def send_on_the_fly(
-        self, method, message, history, command, final_command, required_info=None, obtained_info=None
+        self,
+        method,
+        message,
+        history,
+        command,
+        final_command,
+        required_info=None,
+        obtained_info=None,
     ):
         if required_info is None:
             res = await method(
@@ -60,12 +67,20 @@ class AIConsumer(AsyncWebsocketConsumer):
         logger.info(f"Intent: {intent}")
         if intent == "inne":
             await self.send_on_the_fly(
-                chat_utils.refuse_to_answer, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+                chat_utils.refuse_to_answer,
+                message,
+                messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
             )
             return
         elif intent == "pytanie":
             await self.send_on_the_fly(
-                chat_utils.scrap_ddgo_for_info, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+                chat_utils.scrap_ddgo_for_info,
+                message,
+                messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
             )
             return
 
@@ -83,7 +98,11 @@ class AIConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"message": answer, "command": "isNecessary"}))
 
             await self.send_on_the_fly(
-                chat_utils.question_if_necessary, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+                chat_utils.question_if_necessary,
+                message,
+                messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
             )
             return
 
@@ -99,10 +118,19 @@ class AIConsumer(AsyncWebsocketConsumer):
             return
 
         # Check what tax rate should be applied in the case
-        if "stawka_podatku" not in required_info:
+        logger.info(f"Obtained info: {obtained_info}")
+        if "stawka_podatku" not in obtained_info:
             tax_rate_ans = await chat_utils.compute_tax_rate(message, messages_parsed)
-            required_info.update({"tax_rate": tax_rate_ans["stawka"]})
-            await self.send(text_data=json.dumps({"message": tax_rate_ans["argument"], "command": "basicFlowComplete"}))
+            obtained_info.update({"stawka_podatku": tax_rate_ans["stawka"]})
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "message": {"stawka_podatku": tax_rate_ans["stawka"]},
+                        "command": "informationParsed",
+                    }
+                )
+            )
+
         # # Send message to AI consumer
         # Send message to AI consumer
         await self.send_on_the_fly(

@@ -42,7 +42,7 @@
         justify-content: flex-end;
         flex: 1;
         gap: 24px;
-        overflow-y: auto;
+        overflow-y: scroll;
         max-height: 100%;
         position: relative;
         &::before{

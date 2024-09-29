@@ -50,8 +50,6 @@ async def get_ai_response(message, history, required_info, obtained_info, callba
     )
     system += "Zadawaj jedno pytanie na raz."
 
-    logger.info(f"System prompt: {system}")
-
     user = message
     return await _get_ai_response(
         [
