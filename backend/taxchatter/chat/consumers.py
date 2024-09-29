@@ -5,9 +5,25 @@ from loguru import logger
 
 from . import chat_utils
 
+LANG_MAP = {
+    "pl": "polsku",
+    "uk": "ukraińsku",
+    "en": "angielsku",
+}
+
 
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        query_string = self.scope["query_string"].decode()
+        if query_string:
+            logger.info(f"Query string: {query_string}")
+            query_params = dict(param.split("=") for param in query_string.split("&"))
+
+            # Example: Access a specific query parameter
+            self.lang = query_params.get("lang", "pl").lower()
+        else:
+            self.lang = "pl"
+
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -23,7 +39,15 @@ class AIConsumer(AsyncWebsocketConsumer):
         return messages_parsed
 
     async def send_on_the_fly(
-        self, method, message, history, command, final_command, required_info=None, obtained_info=None
+        self,
+        method,
+        message,
+        history,
+        command,
+        final_command,
+        required_info=None,
+        obtained_info=None,
+        language_setting="pl",
     ):
         if required_info is None:
             res = await method(
@@ -32,6 +56,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 callback=lambda x: self.send(
                     text_data=json.dumps({"message": x, "command": command, "history": history})
                 ),
+                language_setting=language_setting,
             )
         else:
             res = await method(
@@ -42,6 +67,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 callback=lambda x: self.send(
                     text_data=json.dumps({"message": x, "command": command, "history": history})
                 ),
+                language_setting=language_setting,
             )
         await self.send(text_data=json.dumps({"message": res, "command": final_command, "history": history}))
 
@@ -56,34 +82,54 @@ class AIConsumer(AsyncWebsocketConsumer):
         is_necessary = text_data_json["is_necessary"]
         messages_parsed = self.parse_messages_history(messages)
 
-        intent = await chat_utils.recognize_question(message, messages_parsed)
+        intent = await chat_utils.recognize_question(message, messages_parsed, language_setting=LANG_MAP[self.lang])
         logger.info(f"Intent: {intent}")
         if intent == "inne":
             await self.send_on_the_fly(
-                chat_utils.refuse_to_answer, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+                chat_utils.refuse_to_answer,
+                message,
+                messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
+                language_setting=LANG_MAP[self.lang],
             )
             return
         elif intent == "pytanie":
             await self.send_on_the_fly(
-                chat_utils.scrap_ddgo_for_info, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+                chat_utils.scrap_ddgo_for_info,
+                message,
+                messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
+                language_setting=LANG_MAP[self.lang],
             )
             return
 
         # Extract information from user message and prompt them for missing info
-        answer = await chat_utils.parse_info(message, messages_parsed, required_info)
+        answer = await chat_utils.parse_info(
+            message,
+            messages_parsed,
+            required_info,
+            language_setting=LANG_MAP[self.lang],
+        )
         # Remove unchanged values
         answer = {k: v for k, v in answer.items() if str(v).strip() != str(obtained_info.get(k, None)).strip()}
         obtained_info.update(answer)
         await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
 
         # Check whether the form is even necessary
-        answer = await chat_utils.verify_if_necessary(message, messages_parsed)
+        answer = await chat_utils.verify_if_necessary(message, messages_parsed, language_setting=LANG_MAP[self.lang])
         if is_necessary == "unknown" or answer == "nie wiem":
             logger.info(f"AI response: {answer}")
             await self.send(text_data=json.dumps({"message": answer, "command": "isNecessary"}))
 
             await self.send_on_the_fly(
-                chat_utils.question_if_necessary, message, messages_parsed, "basicFlowPartial", "basicFlowComplete"
+                chat_utils.question_if_necessary,
+                message,
+                messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
+                language_setting=LANG_MAP[self.lang],
             )
             return
 
@@ -95,14 +141,25 @@ class AIConsumer(AsyncWebsocketConsumer):
                 messages_parsed,
                 "basicFlowPartial",
                 "basicFlowComplete",
+                language_setting=LANG_MAP[self.lang],
             )
             return
 
         # Check what tax rate should be applied in the case
         if "stawka_podatku" not in required_info:
-            tax_rate_ans = await chat_utils.compute_tax_rate(message, messages_parsed)
-            required_info.update({"tax_rate": tax_rate_ans["stawka"]})
-            await self.send(text_data=json.dumps({"message": tax_rate_ans["argument"], "command": "basicFlowComplete"}))
+            tax_rate_ans = await chat_utils.compute_tax_rate(
+                message, messages_parsed, language_setting=LANG_MAP[self.lang]
+            )
+            logger.info(f"Tax rate answer: {tax_rate_ans}")
+            required_info.append({"StawkaPodatku": tax_rate_ans["stawka"]})
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "message": tax_rate_ans["argument"],
+                        "command": "basicFlowComplete",
+                    }
+                )
+            )
         # # Send message to AI consumer
         # Send message to AI consumer
         await self.send_on_the_fly(
@@ -113,4 +170,5 @@ class AIConsumer(AsyncWebsocketConsumer):
             "basicFlowComplete",
             required_info=required_info,
             obtained_info=obtained_info,
+            language=LANG_MAP[self.lang],
         )
