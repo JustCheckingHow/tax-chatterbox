@@ -41,11 +41,13 @@ async def _get_ai_response(messages, callback=None):
         return res.choices[0].message.content.strip()
 
 
-async def get_ai_response(message, history, required_info, obtained_info, callback=None):
+async def get_ai_response(message, history, required_info, obtained_info, callback=None, language_setting="pl"):
     system = (
         f"Jest {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Jesteś AI pomocnikiem podatnika. "
         "Zbierz informacje, które są potrzebne do wypełnienia wniosku. "
-        "Odpowiadaj tylko i wyłącznie po polsku. Musisz zebrać następujące informacje: " + str(required_info) + ". "
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}. Musisz zebrać następujące informacje: "
+        + str(required_info)
+        + ". "
         "Oto informacje, które użytkownik już podał: " + str(obtained_info) + ". "
     )
     system += "Zadawaj jedno pytanie na raz."
@@ -61,10 +63,10 @@ async def get_ai_response(message, history, required_info, obtained_info, callba
     )
 
 
-async def parse_info(message, history, required_info) -> dict:
+async def parse_info(message, history, required_info, language_setting="pl") -> dict:
     system = (
         "Jesteś AI pomocnikiem podatnika. Zbierz informacje, które są potrzebne do wypełnienia wniosku. "
-        "Odpowiadaj tylko i wyłącznie po polsku."
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
 
     history_str = (
@@ -77,7 +79,7 @@ async def parse_info(message, history, required_info) -> dict:
         "Oto informacje, które są potrzebne do wypełnienia wniosku: "
         + str(required_info)
         + ". Nie pytaj o nic więcej. "
-        "Z wypowiedzi użytkownika wyciągnij podane informacje i wypisz je w formacie JSON. Odpowiadaj tylko i wyłącznie po polsku. "  # noqa: E501
+        f"Z wypowiedzi użytkownika wyciągnij podane informacje i wypisz je w formacie JSON. Odpowiadaj tylko i wyłącznie po {language_setting} "  # noqa: E501
         'Odpowiedz tylko w formacie JSON: {"nazwa_informacji": "wartość", "nazwa_informacji2": "wartość2"}. Jeżeli user nie podał żadnych informacji, zwróć pusty słownik: {}. \n'  # noqa: E501
         f"{history_str}\n" + "Wyciągnij informacje z całej rozmowy."
     )
@@ -97,10 +99,10 @@ async def parse_info(message, history, required_info) -> dict:
     return json.loads(res)
 
 
-async def verify_if_necessary(message, history):
+async def verify_if_necessary(message, history, language_setting="pl"):
     system = (
         "Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek PCC-3. "
-        "Odpowiadaj tylko i wyłącznie po polsku."
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
 
     user = (
@@ -121,10 +123,10 @@ async def verify_if_necessary(message, history):
     return res
 
 
-async def question_if_necessary(message, history, callback=None):
+async def question_if_necessary(message, history, callback=None, language_setting="pl"):
     system = (
         "Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek PCC-3. "
-        "Odpowiadaj tylko i wyłącznie po polsku."
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
 
     user = (
@@ -144,8 +146,12 @@ async def question_if_necessary(message, history, callback=None):
     return res
 
 
-async def compute_tax_rate(message, history):
-    system = "Jesteś AI pomocnikiem podatnika. " "Sprawdź jaka stawka podatku aplikuje się w sytuacji użytkownika"
+async def compute_tax_rate(message, history, language_setting="pl"):
+    system = (
+        "Jesteś AI pomocnikiem podatnika. "
+        "Sprawdź jaka stawka podatku aplikuje się w sytuacji użytkownika"
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}."
+    )
 
     user = (
         f"Oto zasady wyliczania podatku od umów PCC: {RULES}. Oto moja najnowsza wiadomość: `{message}`. "  # noqa: E501
@@ -170,17 +176,17 @@ async def compute_tax_rate(message, history):
     return json.loads(res)
 
 
-async def rationale_why_not_necessary(message, history, callback=None):
+async def rationale_why_not_necessary(message, history, callback=None, language_setting="pl"):
     system = (
         "Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek PCC-3. "
-        "Odpowiadaj tylko i wyłącznie po polsku."
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
 
     user = (
         f"Oto zasady kiedy trzeba, a kiedy nie trzeba wypełniać wniosku: {RULES}. Oto moja najnowsza wiadomość: `{message}`. "  # noqa: E501
         "Wytłumacz mi dlaczego nie muszę wypełniać wniosku."
     )
-
+    logger.error(f"Dlaczego nie muszę wypełniać wniosku {system}")
     res = await _get_ai_response(
         [
             {"role": "system", "content": system},
@@ -193,13 +199,14 @@ async def rationale_why_not_necessary(message, history, callback=None):
     return res
 
 
-async def recognize_question(message, history):
+async def recognize_question(message, history, language_setting="pl"):
     history.append({"role": "user", "content": message})
 
     logger.info(f"History: {history}")
 
     system = (
-        "Jesteś AI pomocnikiem podatnika. Rozpoznaj intencję użytkownika. " "Odpowiadaj tylko i wyłącznie po polsku."
+        "Jesteś AI pomocnikiem podatnika. Rozpoznaj intencję użytkownika. "
+        f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
 
     user = (
@@ -219,10 +226,10 @@ async def recognize_question(message, history):
     return res
 
 
-async def refuse_to_answer(message, history, callback=None):
+async def refuse_to_answer(message, history, callback=None, language_setting="pl"):
     history.append({"role": "user", "content": message})
 
-    system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po polsku."
+    system = f"Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
     history_str = (
         "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
     )
@@ -246,7 +253,7 @@ async def refuse_to_answer(message, history, callback=None):
     return res
 
 
-async def scrap_ddgo_for_info(message, history, callback=None):
+async def scrap_ddgo_for_info(message, history, callback=None, language_setting="pl"):
     history = history[-6:]
     history.append({"role": "user", "content": message})
 
@@ -254,7 +261,7 @@ async def scrap_ddgo_for_info(message, history, callback=None):
         "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
     )
 
-    system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po polsku."
+    system = f"Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
 
     user = history_str + "Użytkownik zadał pytanie. Przygotuj zapytanie do wyszukiwarki DuckDuckGo."
 

@@ -110,7 +110,7 @@ const Chat: React.FC = () => {
 
 
   const [input, setInput] = useState('');
-  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
+  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?language=pl');
 
   const handleSendMessage = () => {
     if (input.trim()) {
