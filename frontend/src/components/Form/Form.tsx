@@ -1,4 +1,5 @@
-import styles from './Checklist.module.scss';
+import React from 'react';
+import styles from "./Form.module.scss";
 
 interface ChecklistProps {
     required_info: { [key: string]: { description: string, required: boolean, label: string, pattern: string, type: string } }[];
@@ -7,7 +8,8 @@ interface ChecklistProps {
 }
 
 
-const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info, setObtainedInfo }) => {
+const Form: React.FC<ChecklistProps> = ({ required_info, obtained_info, setObtainedInfo }) => {
+
     return (
         <aside className={styles.checklist__aside}>
             <h3>Skompletowane dane</h3>
@@ -31,7 +33,7 @@ const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info, set
                 })}
             </ul>
         </aside>
-    )
-}
+    );
+};
 
-export default Checklist;
+export default Form;

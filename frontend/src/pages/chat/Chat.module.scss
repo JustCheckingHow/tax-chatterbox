@@ -28,6 +28,22 @@
   &__input{
     flex: 1;
   }
+  &__progress{
+    background-color: #f1f1f1;
+  
+    &__item{
+      height: 12px;
+      background-color: #0052a5;
+      border-radius: 12px;
+      transition: .3s;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
   &__message{
     max-width: 90%;
     display: flex;
@@ -122,6 +138,13 @@
       }
     }
   }
+}
+
+.container__lg{
+  max-width: 1400px;
+  display: flex;
+  gap: 24px;
+  flex-direction: row;
 }
 
 .loading {

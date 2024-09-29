@@ -18,6 +18,7 @@ import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
 import { useLanguage } from '../../context/languageContext.ts';
+import Form from '../../components/Form/Form.tsx';
 
 
 interface Message {
@@ -222,7 +223,17 @@ const Chat: React.FC = () => {
   return (
     <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
       <Nav />
-      <div className="container" style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
+      <div className={'container ' + styles.container__lg} style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
+        <div className={styles.chat__progress}>
+          <div 
+            className={styles.chat__progress__item} 
+            style={{width: `${(requiredInfo.length / (obtainedInfo.length || 1))}%`}}
+          >
+            {(requiredInfo.length / (obtainedInfo.length || 1))}%
+          </div>
+        </div>
+        <div>
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
         <div className={styles.chat__container}>
           {messages.length < 2 && (view != "uploadDoc" ? (
             <div
@@ -288,7 +299,11 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+        </div>
+        </div>
+      <div className="container" style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
+      <Form required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+
         {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
         {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>

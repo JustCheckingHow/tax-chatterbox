@@ -25,26 +25,6 @@ const Nav: React.FC = () => {
                     <option value="en" selected={language === "en"}>EN </option>
                     <option value="uk" selected={language === "uk"}>UK </option>
                 </select>
-                <ul className={styles.nav__ul}>
-                    <li>
-                        <Link to="/">
-                            <img src={homeIcon} alt="homeIcon" />
-                            <p>Strona Główna</p>
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/chat">
-                            <img src={chatIcon} alt="chatIcon" />
-                            <p>Chat</p>
-                        </Link>
-                    </li>
-                    <li>
-                        <Link to="/chat">
-                            <img src={knowledgeIcon} alt="knowledgeIcon" />
-                            <p>Jak wysłać PCC-3?</p>
-                        </Link>
-                    </li>
-                </ul>
             </div>
         </nav>
     );
