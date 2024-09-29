@@ -81,7 +81,8 @@ async def parse_info(message, history, required_info, language_setting="pl") -> 
         + ". Nie pytaj o nic więcej. "
         f"Z wypowiedzi użytkownika wyciągnij podane informacje i wypisz je w formacie JSON. Odpowiadaj tylko i wyłącznie po {language_setting} "  # noqa: E501
         'Odpowiedz tylko w formacie JSON: {"nazwa_informacji": "wartość", "nazwa_informacji2": "wartość2"}. Jeżeli user nie podał żadnych informacji, zwróć pusty słownik: {}. \n'  # noqa: E501
-        f"{history_str}\n" + "Wyciągnij informacje z całej rozmowy."
+        f"{history_str}\n"
+        + "Wyciągnij informacje z całej rozmowy. Pamiętaj, że user może podać wiele informacji w jednej wiadomości."
     )
 
     res = await _get_ai_response(
@@ -261,13 +262,13 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
         "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
     )
 
-    system = f"Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
+    system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
 
     user = history_str + "Użytkownik zadał pytanie. Przygotuj zapytanie do wyszukiwarki DuckDuckGo."
 
     query = await _get_ai_response(
         [
-            {"role": "system", "content": system},
+            {"role": "system", "content": system.format(language_setting="polsku")},
             {"role": "user", "content": user},
         ],
     )
@@ -283,16 +284,19 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
 
     user = (
         history_str + "Oto wyniki wyszukiwania DuckDuckGo: " + content + ". \n"
-        "Użytkownik zadał pytanie. Odpowiedz na nie na podstawie wyników wyszukiwania. Cytuj źródła."
+        "Użytkownik zadał pytanie. Odpowiedz na nie na podstawie wyników wyszukiwania. "
+        "Zawsze, absolutnie zawsze cytuj dokładnie źródła."
     )
 
     res = await _get_ai_response(
         [
-            {"role": "system", "content": system},
+            {"role": "system", "content": system.format(language_setting=language_setting)},
             {"role": "user", "content": user},
         ],
         callback=callback,
     )
+
+    logger.info(f"Answer: {res}")
 
     return res
 
