@@ -1067,40 +1067,40 @@ zarządzania spółki kapitałowej lub jej siedziby, rzeczywistego ośrodka zarz
 def validate_json_pcc3(json_data):
     # person data:
     osoba_fizyczna = OsobaFizyczna(
-        pesel=json_data.get("Pesel"),
-        imie=json_data.get("Imie"),
-        nazwisko=json_data.get("Nazwisko"),
-        imie_ojca=json_data.get("ImieOjca"),
-        imie_matki=json_data.get("ImieMatki"),
+        pesel=json_data.get("Pesel", None),
+        imie=json_data.get("Imie", None),
+        nazwisko=json_data.get("Nazwisko", None),
+        imie_ojca=json_data.get("ImieOjca", None),
+        imie_matki=json_data.get("ImieMatki", None),
     ).parse_validate()
     # Address data:
     adres_zamieszkania = AdresZamieszkania(
-        kod_kraju=json_data.get("KodKraju"),
-        wojewodztwo=json_data.get("Wojewodztwo"),
-        powiat=json_data.get("Powiat"),
-        gmina=json_data.get("Gmina"),
-        miejscowosc=json_data.get("Miejscowosc"),
-        ulica=json_data.get("Ulica"),
-        nr_domu=json_data.get("NrDomu"),
-        nr_lokalu=json_data.get("NrLokalu"),
-        kod_pocztowy=json_data.get("KodPocztowy"),
+        kod_kraju=json_data.get("KodKraju", None),
+        wojewodztwo=json_data.get("Wojewodztwo", None),
+        powiat=json_data.get("Powiat", None),
+        gmina=json_data.get("Gmina", None),
+        miejscowosc=json_data.get("Miejscowosc", None),
+        ulica=json_data.get("Ulica", None),
+        nr_domu=json_data.get("NrDomu", None),
+        nr_lokalu=json_data.get("NrLokalu", None),
+        kod_pocztowy=json_data.get("KodPocztowy", None),
     ).parse_validate()
 
     pcc_schema = PCC3_6_Schema(
-        transaction_date=json_data.get("P_4"),
-        declaration_date=json_data.get("DataZlozeniaDeklaracji"),
-        kod_urzedu=json_data.get("KodUrzedu"),
+        transaction_date=json_data.get("P_4", None),
+        declaration_date=json_data.get("DataZlozeniaDeklaracji", None),
+        kod_urzedu=json_data.get("KodUrzedu", None),
         osoba_fizyczna=osoba_fizyczna,
         adres_zamieszkania=adres_zamieszkania,
-        P_6=json_data.get("P_6"),
-        P_7=json_data.get("P_7"),
-        P_20=json_data.get("P_20"),
-        P_21=json_data.get("P_21"),
-        P_22=json_data.get("P_22"),
-        P_23=json_data.get("P_23"),
-        P_26=json_data.get("P_26"),
-        P_62=json_data.get("P_62"),
-        stawka_podatku=json_data.get("stawka_podatku"),
+        P_6=json_data.get("P_6", None),
+        P_7=json_data.get("P_7", None),
+        P_20=json_data.get("P_20", None),
+        P_21=json_data.get("P_21", None),
+        P_22=json_data.get("P_22", None),
+        P_23=json_data.get("P_23", None),
+        P_26=json_data.get("P_26", None),
+        P_62=json_data.get("P_62", None),
+        stawka_podatku=json_data.get("stawka_podatku", 2),
     ).parse_validate()
 
     out = {}
