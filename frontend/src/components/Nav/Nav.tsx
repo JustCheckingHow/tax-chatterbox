@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styles from "./Nav.module.scss";
 import logo from "../../assets/image/logo.png"
 import { Link } from 'react-router-dom';
@@ -6,9 +6,16 @@ import { Link } from 'react-router-dom';
 import chatIcon from "../../assets/icons/czatbot.svg";
 import knowledgeIcon from "../../assets/icons/bazawiedzy.svg";
 import homeIcon from "../../assets/icons/home.svg";
+import LangContext from '../../context/LangContext';
 
 const Nav: React.FC = () => {
     const [lang, setLang] = useState("pl");
+    let langContext = useContext(LangContext);
+
+    useEffect(() => {
+        langContext = lang;
+        // window.location.reload();
+    }, [lang]);
 
     return (
         <nav className={styles.nav}>

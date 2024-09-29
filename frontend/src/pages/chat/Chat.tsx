@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -16,6 +16,7 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
+import LangContext from '../../context/LangContext.tsx';
 
 
 interface Message {
@@ -63,6 +64,7 @@ const Chat: React.FC = () => {
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
   const [xmlFile, setXmlFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const langContext = useContext(LangContext);
   
   useEffect(() => {
     try {
@@ -103,14 +105,11 @@ const Chat: React.FC = () => {
           setAllUrzedy(data.all_urzedy);
         })
     }
-    if(validatedInfo) {
-      generateXml();
-    }
   }, [validatedInfo, obtainedInfo]);
 
 
   const [input, setInput] = useState('');
-  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?language=pl');
+  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?lang=' + (langContext ? langContext : "pl"));
 
   const handleSendMessage = () => {
     if (input.trim()) {
@@ -257,9 +256,9 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
-        {!validatedInfo && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
-      {xmlFile && <FinalDocument xmlFile={xmlFile} />}
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+        {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+        {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
       <Footer />
     </Box>
