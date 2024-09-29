@@ -13,15 +13,23 @@ LANG_MAP = {
     "en": "angielsku",
 }
 
+UNNECESSARY_QUESTIONS = [
+    "Powiat",
+    "Wojewodztwo",
+    "KodKraju",
+    "KodPocztowy",
+    "UrzadSkarbowy"
+]
 
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
 
-        conversation = await database_sync_to_async(Conversation.objects.create)()
-        await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
+        # conversation = await database_sync_to_async(Conversation.objects.create)()
+        # await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
 
     async def disconnect(self, close_code):
+        # if conversation is empty, delete it
         pass
 
     def parse_messages_history(self, messages):
@@ -77,8 +85,16 @@ class AIConsumer(AsyncWebsocketConsumer):
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
         conversation_key = text_data_json["conversation_key"]
+        
+        for element in required_info:
+            if list(element.keys())[0] in UNNECESSARY_QUESTIONS:
+                required_info.remove(element)
 
-        conversation = await database_sync_to_async(Conversation.objects.get)(conversation_key=conversation_key)
+        if conversation_key is None:
+            conversation = await database_sync_to_async(Conversation.objects.create)()
+            await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
+        else:
+            conversation = await database_sync_to_async(Conversation.objects.get)(conversation_key=conversation_key)
 
         message_obj = Message(conversation=conversation, content=message, is_user_message=True)
         await database_sync_to_async(message_obj.save)()

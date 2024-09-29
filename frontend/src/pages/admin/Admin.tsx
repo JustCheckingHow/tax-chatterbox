@@ -13,6 +13,7 @@ interface IntentStats {
 const Admin: React.FC = () => {
   const [intentStats, setIntentStats] = useState<IntentStats>({});
   const [messagesStats, setMessagesStats] = useState<IntentStats>({});
+  const [conversationsStats, setConversationsStats] = useState<IntentStats>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +26,9 @@ const Admin: React.FC = () => {
         console.log(response.data);
         setIntentStats(response.data.stats);
         setMessagesStats(response.data.messages_stats);
+        setConversationsStats(response.data.conversations_stats);
         setLoading(false);
-      } catch (err) {
+      } catch {
         setError('Failed to fetch intent statistics');
         setLoading(false);
       }
@@ -41,6 +43,8 @@ const Admin: React.FC = () => {
   // Process data for charts
   const hours = Object.keys(intentStats).sort();
   const intents = Array.from(new Set(Object.values(intentStats).flatMap(Object.keys)));
+  const conversations = Object.values(conversationsStats).map(stat => stat.conversations);
+  console.log(conversations);
 
   const chartData = intents.map(intent => ({
     intent,
@@ -93,9 +97,7 @@ const Admin: React.FC = () => {
               <LineChart
                 xAxis={[{ scaleType: 'band', data: hours }]}
                 series={[{
-                  data: hours.map(hour =>
-                    Object.values(intentStats[hour]).reduce((sum, count) => sum + count, 0)
-                  ),
+                  data: conversations,
                   label: 'Konwersacje',
                 }]}
                 height={300}

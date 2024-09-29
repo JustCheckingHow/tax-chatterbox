@@ -14,6 +14,7 @@ from .address_verification import GMAPS, all_urzedy, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
 from .models import Conversation, Intent, Message
 from .xml_generator import PCC3_6_Schema, generate_xml, validate_json_pcc3
+from loguru import logger
 
 
 def chat_page(request):
@@ -22,7 +23,9 @@ def chat_page(request):
 
 class ChatAPIView(APIView):
     def get(self, request):
-        return Response({"message": "Welcome to the Chat API"}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Welcome to the Chat API"}, status=status.HTTP_200_OK
+        )
 
     def post(self, request):
         # Here you can handle chat messages
@@ -41,14 +44,20 @@ class FileUploadView(APIView):
                 temp_file.write(chunk)
             responses = ocr_pdf(temp_file.name)
 
-            return Response({"message": "File uploaded successfully", "responses": responses})
+            return Response(
+                {"message": "File uploaded successfully", "responses": responses}
+            )
 
-        return Response({"message": "File uploaded successfully"}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "File uploaded successfully"}, status=status.HTTP_200_OK
+        )
 
 
 class XmlSchemaView(APIView):
     def get(self, request):
-        return Response({"message": PCC3_6_Schema.get_schema()}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": PCC3_6_Schema.get_schema()}, status=status.HTTP_200_OK
+        )
 
 
 class ValidateUserDataView(APIView):
@@ -75,7 +84,9 @@ class GenerateXmlView(APIView):
 
             with open(temp_file_name) as f:
                 response = Response(f.read(), content_type="application/xml")
-                response["Content-Disposition"] = 'attachment; filename="deklaracja.xml"'
+                response["Content-Disposition"] = (
+                    'attachment; filename="deklaracja.xml"'
+                )
                 os.remove(temp_file_name)
                 return response
 
@@ -108,11 +119,11 @@ class AdminConversationsView(APIView):
 
             # Query for conversations in the last 24 hours
             conversations = Conversation.objects.filter(created_at__gte=day_ago)
-
+            
             # Query for intents in the last 24 hours, join with Message
-            intents = Intent.objects.filter(message__conversation__in=conversations).select_related(
-                "message__conversation"
-            )
+            intents = Intent.objects.filter(
+                message__conversation__in=conversations
+            ).select_related("message__conversation")
 
             # Group by hour and intent, count messages
             stats = (
@@ -131,6 +142,12 @@ class AdminConversationsView(APIView):
                 .order_by("hour")
             )
 
+            conversations_grouped_by_hour = (
+                conversations.annotate(hour=TruncHour("created_at"))
+                .values("hour")
+                .annotate(count=Count("id"))
+            )
+
             # Format the data for response
             formatted_stats = {}
             for stat in stats:
@@ -147,6 +164,22 @@ class AdminConversationsView(APIView):
                     messages_stats[hour_key] = {}
                 messages_stats[hour_key]["messages"] = stat["count"]
 
-            return Response({"stats": formatted_stats, "messages_stats": messages_stats}, status=status.HTTP_200_OK)
+            conversations_stats = {}
+            for stat in conversations_grouped_by_hour:
+                hour_key = stat["hour"].isoformat()
+                if hour_key not in conversations_stats:
+                    conversations_stats[hour_key] = {}
+                conversations_stats[hour_key]["conversations"] = stat["count"]
+
+            return Response(
+                {
+                    "stats": formatted_stats,
+                    "messages_stats": messages_stats,
+                    "conversations_stats": conversations_stats,
+                },
+                status=status.HTTP_200_OK,
+            )
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
