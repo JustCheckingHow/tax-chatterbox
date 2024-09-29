@@ -200,10 +200,19 @@ class AdresZamieszkania:
                     "pattern": "^[A-Za-z]{1,30}$",
                 }
             },
-            {"NrDomu": {"description": "Numer domu", "required": True, "type": "string", "pattern": "^[0-9]{1,10}$"}},
+            {
+                "NrDomu": {
+                    "description": "Numer domu",
+                    "label": "Numer domu",
+                    "required": True,
+                    "type": "string",
+                    "pattern": "^[0-9]{1,10}$",
+                }
+            },
             {
                 "NrLokalu": {
                     "description": "Numer lokalu",
+                    "label": "Numer lokalu",
                     "required": True,
                     "type": "string",
                     "pattern": "^[0-9]{1,10}$",
@@ -212,6 +221,7 @@ class AdresZamieszkania:
             {
                 "KodPocztowy": {
                     "description": "Kod pocztowy",
+                    "label": "Kod pocztowy",
                     "required": True,
                     "type": "string",
                     "pattern": "^[0-9]{2}-[0-9]{3}$",
@@ -515,16 +525,36 @@ class SDZ2_6_Schema:
         self.P_45 = P_45
 
         self.P_46 = P_46
+        # P_47 - typ spółki: 1 - spółka osobowa, 2 - spółka kapitałowa
         self.P_47 = P_47
+        # P_48 - Podstawa opodatkowania dotyczy: 1 - zawarcia umowy spółki, 2 - zwiększenia majątku spółki albo
+        # podwyższenia kapitału zakładowego,
+        # 3 - dopłaty,
+        # 4 - pożyczki udzielonej spółce osobowej przez wspólnika,
+        # 5 - oddania spółce rzeczy lub praw majątkowych do nieodpłatnego używania,
+        # 6 - przekształcenia spółek,
+        # 7 - łączenia spółek,
+        # 8 - przeniesienia na terytorium Rzeczypospolitej Polskiej
+        # rzeczywistego ośrodka zarządzania spółki kapitałowej lub jej siedziby
         self.P_48 = P_48
+        # P_49 - podstawa opodatkowania - określona zgodnie z art. 6 ust. 1 pkt 8 ustawy
+        # (po zaokrągleniu do pełnych złotych)
         self.P_49 = P_49
+        # P_50 - Opłaty i koszty związane z zawarciem umowy spółki lub jej zmiany - na podstawie art. 6 ust. 9 ustawy
         self.P_50 = P_50
+        # P_51 - Podstawa obliczenia podatku
         self.P_51 = P_51
+        # P_52 - Kwota należnego podatku (po zaokrągleniu do pełnych złotych)
         self.P_52 = P_52
+        # P_80 -ułamek do jakiegoś tam
         self.P_80 = P_80
+        # P_81 - kwota podatku do zapłaty
         self.P_81 = P_81
+        # P_82 - kwota podatku do zapłaty
         self.P_82 = P_82
+
         self.P_87 = P_87
+
         self.P_88 = P_88
         self.P_89 = P_89
         self.P_90 = P_90
