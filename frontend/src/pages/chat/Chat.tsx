@@ -140,7 +140,7 @@ const Chat: React.FC = () => {
     if (validatedInfo) {
       generateXml();
     }
-  }, [requiredInfo, obtainedInfo]);
+  }, [obtainedInfo]);
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
@@ -161,6 +161,18 @@ const Chat: React.FC = () => {
       setInput('');
       setIsLoading(true);
       // Here you would typically send the message to your backend
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/validate_infer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          data: obtainedInfo
+        })
+      }).then(response => response.json())
+        .then(data => {
+          setObtainedInfo({...obtainedInfo, ...data.message});
+        })
     }
   };
 
