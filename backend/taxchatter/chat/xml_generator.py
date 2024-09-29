@@ -460,10 +460,11 @@ class PCC3_6_Schema:
     def parse_stawka_podatku(self):
         try:
             if "%" in str(self.stawka_podatku):
-                self.stawka_podatku = float(self.stawka_podatku.replace("%", ""))
+                self.stawka_podatku = float(self.stawka_podatku.replace("%", "").replace(",", "."))
             else:
                 self.stawka_podatku = float(self.stawka_podatku)
         except ValueError as err:
+            logger.exception(err)
             raise ValueError("Invalid tax rate") from err
 
         accepted_values = (1, 2, 0.1, 0.5, 0.2, 0.0)
