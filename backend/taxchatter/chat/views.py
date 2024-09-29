@@ -1,32 +1,30 @@
 import base64
 import os
 import tempfile
-from datetime import timedelta
 import uuid
+from datetime import timedelta
+from io import BytesIO
 
+import qrcode
 from django.db.models import Count
 from django.db.models.functions import TruncHour
 from django.shortcuts import render
 from django.utils import timezone
+from loguru import logger
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .address_verification import GMAPS, all_urzedy, get_closest_urzad
-from .llm_prompts.qwen import ocr_pdf, submit_image, get_ocr_chat_messages
 from .address_verification import (
     GMAPS,
     all_urzedy,
     get_closest_urzad,
     parse_address_components,
 )
-from .llm_prompts.qwen import ocr_pdf
+from .llm_prompts.qwen import get_ocr_chat_messages, ocr_pdf, submit_image
 from .models import Conversation, Intent, Message
-from .xml_generator import PCC3_6_Schema, generate_xml, validate_json_pcc3
-from loguru import logger
+from .xml_generator import PCC3_6_Schema, SDZ2_6_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
 
-import qrcode
-from io import BytesIO
 
 def chat_page(request):
     return render(request, "chat/chat.html")
@@ -94,6 +92,12 @@ class XmlSchemaView(APIView):
             {"message": PCC3_6_Schema.get_schema()}, status=status.HTTP_200_OK
         )
 
+class XmlSchemaSdzView(APIView):
+    def get(self, request):
+        return Response(
+            {"message": SDZ2_6_Schema.get_schema()}, status=status.HTTP_200_OK
+        )
+
 
 class ValidateUserDataView(APIView):
     def post(self, request):
@@ -142,6 +146,24 @@ class ValidateAndInferView(APIView):
             {"message": "User data validated successfully", "data": data},
             status=status.HTTP_200_OK,
         )
+
+
+class GenerateSdzView(APIView):
+    def post(self, request):
+        data = request.data
+        try:
+            temp_file_name = generate_xml_sdz2(data)
+
+            with open(temp_file_name) as f:
+                response = Response(f.read(), content_type="application/xml")
+                response["Content-Disposition"] = (
+                    'attachment; filename="deklaracja.xml"'
+                )
+                os.remove(temp_file_name)
+                return response
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GenerateXmlView(APIView):
