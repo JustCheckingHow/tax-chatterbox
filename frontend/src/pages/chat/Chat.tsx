@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -16,9 +16,12 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
-import { useLanguage } from '../../context/languageContext.ts';
-import Form from '../../components/Form/Form.tsx';
-
+import { useLanguage } from '../../context/languageContext';
+import Form from '../../components/Form/Form';
+// // @ts-ignore
+// import DOMPurify from 'dompurify';
+// // @ts-ignore
+// import { marked } from 'marked';
 
 interface Message {
   message: string;
@@ -40,29 +43,22 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   }
 
   const renderMessage = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-    return parts.map((part, index) =>
-      urlRegex.test(part) ? (
-        <a key={index} href={part} target="_blank" rel="noopener noreferrer">
-          {part}
-        </a>
-      ) : (
-        part
-      )
+    // const rawHtml = marked(text);
+    // // @ts-ignore
+    // const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+    return (
+      <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
+        {senderName != '' && <div className={styles.chat__message__author}>
+          {senderName === 'AI' && <img src={logo} alt="logo" />}
+        </div>}
+        <div className={styles.chat__message__content}>
+          <div dangerouslySetInnerHTML={{ __html: text }} />
+        </div>
+      </li>
     );
   };
 
-  return (
-    <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
-      {senderName != '' && <div className={styles.chat__message__author}>
-        {senderName === 'AI' && <img src={logo} alt="logo" />}
-      </div>}
-      <div className={styles.chat__message__content}>
-        {renderMessage(message)}
-      </div>
-    </li>
-  )
+  return renderMessage(message);
 }
 
 const Chat: React.FC = () => {
@@ -78,12 +74,20 @@ const Chat: React.FC = () => {
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [conversationKey, setConversationKey] = useState<string | null>(null);
-  const [requiredInfoLength, setRequiredInfoLength] = useState<number>(0);
-  const [progress, setProgress] = useState<number>(0);
   const [multideviceIdx, setMultideviceIdx] = useState<string | null>(null);
   const [mobileImage, setMobileImage] = useState<string | null>(null);
-
+  const [formType, setFormType] = useState<string | null>(null);
+  const [formName, setFormName] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const { language } = useLanguage();
 
@@ -99,9 +103,10 @@ const Chat: React.FC = () => {
   useEffect(() => {
     try {
       console.log(validatedInfo);
-      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/xml_schema`)
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/${formType}`)
         .then(response => response.json())
         .then(data => {
+          console.log(data);
           setRequiredInfo(data.message);
           let requiredInfoLength = 0;
           data.message.forEach((info: any) => {
@@ -109,12 +114,11 @@ const Chat: React.FC = () => {
               requiredInfoLength++;
             }
           });
-          setRequiredInfoLength(requiredInfoLength);
         })
     } catch (error) {
       console.error(error);
     }
-  }, [])
+  }, [formType])
 
   useEffect(() => {
     if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == null) {
@@ -147,7 +151,6 @@ const Chat: React.FC = () => {
         progress++;
       }
     });
-    setProgress(progress);
     setValidatedInfo(isValid);
 
     if (validatedInfo) {
@@ -167,7 +170,8 @@ const Chat: React.FC = () => {
         history: messages,
         is_necessary: isNecessary,
         language: language,
-        conversation_key: conversationKey
+        conversation_key: conversationKey,
+        form_name: formName
       }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
@@ -231,6 +235,12 @@ const Chat: React.FC = () => {
         console.log("Setting mobile image");
         setMobileImage(lastMessageData.fileBase64);
       }
+      else if (lastMessageData.command === 'formType') {
+        console.log("Form type");
+        console.log(lastMessageData.endpoint);
+        setFormType(lastMessageData.endpoint);
+        setFormName(lastMessageData.formName);
+      }
     }
   }, [lastMessage]);
 
@@ -280,19 +290,17 @@ const Chat: React.FC = () => {
                 conversation_key: conversationKey,
                 language: language,
                 obtained_info: obtainedInfo,
+                form_name: formName
               };
               sendMessage(JSON.stringify(message));
             }
-            setProgress(100);
           });
         } else {
           console.error('Upload failed');
-          setProgress(0);
           }
         })
         .catch(error => {
           console.error('Upload error:', error);
-          setProgress(0);
         })
         .finally(() => {
           setIsLoading(false);
@@ -312,18 +320,24 @@ const generateXml = () => {
     fetch(`${import.meta.env.VITE_BACKEND_URL}/api/generate_xml`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         data: obtainedInfo
       })
-    }).then(response => response.blob())
-      .then(blob => {
+    }).then(response => response.json())
+      .then(data => {
+        console.log(data);
+        const blob = new Blob([data], { type: 'application/xml' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         a.download = 'formularz.xml';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
         // setXmlFile(url);
       })
   } catch (error) {
@@ -338,12 +352,11 @@ return (
       <div className={styles.chat__progress}>
         <div
           className={styles.chat__progress__item}
-          style={{ width: `${(progress / requiredInfoLength) * 100}%` }}
+          style={{ width: `100%` }}
         >
 
         </div>
         <span className={styles.chat__progress__item__text}>
-          {((progress / requiredInfoLength) * 100).toFixed(2)}%
         </span>
       </div>
       <div className={styles.chat__wrapper}>
@@ -366,12 +379,6 @@ return (
                 content={"Zrób zdjęcie umowy i wgraj je tutaj."}
                 qr={qrCode}
               />
-              <GridItem
-                onClick={() => { }}
-                icon={voiceIcon}
-                heading={"Porozmawiaj z asystentem"}
-                content={"Porozmawiaj z asystentem i opisz mu swoją sytuację. JustCheckingTax Ci pomoże."}
-              />
             </div>
           ) : <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <ChatDocUploader sendMessage={
@@ -384,7 +391,8 @@ return (
                   history: messages,
                   is_necessary: isNecessary,
                   language: language,
-                  conversation_key: conversationKey
+                  conversation_key: conversationKey,
+                  form_name: formName
                 };
                 setMessages(m => [...m, { message: message.text, sender: 'user', hidden: true }]);
                 sendMessage(JSON.stringify(msg));

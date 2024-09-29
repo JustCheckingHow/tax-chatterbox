@@ -1,7 +1,9 @@
 import datetime
+import logging
 import tempfile
 import xml.etree.ElementTree as ET
 
+from loguru import logger
 
 class OsobaFizyczna:
     def __init__(
@@ -21,10 +23,11 @@ class OsobaFizyczna:
         self.imie_matki = imie_matki
 
     @staticmethod
-    def get_schema():
+    def get_schema(suffix=None):
+        suffix = "" if suffix is None else f"_{suffix}"
         return [
             {
-                "Pesel": {
+                f"Pesel{suffix}": {
                     "description": "Numer Pesel",
                     "label": "Pesel",
                     "required": True,
@@ -33,7 +36,7 @@ class OsobaFizyczna:
                 }
             },
             {
-                "Imie": {
+                f"Imie{suffix}": {
                     "description": "Imię",
                     "label": "Imię",
                     "required": True,
@@ -42,7 +45,7 @@ class OsobaFizyczna:
                 }
             },
             {
-                "Nazwisko": {
+                f"Nazwisko{suffix}": {
                     "description": "Nazwisko",
                     "label": "Nazwisko",
                     "required": True,
@@ -51,7 +54,7 @@ class OsobaFizyczna:
                 }
             },
             {
-                "ImieOjca": {
+                f"ImieOjca{suffix}": {
                     "description": "Imię ojca",
                     "label": "Imię ojca",
                     "required": True,
@@ -60,7 +63,7 @@ class OsobaFizyczna:
                 }
             },
             {
-                "ImieMatki": {
+                f"ImieMatki{suffix}": {
                     "description": "Imię matki",
                     "label": "Imię matki",
                     "required": True,
@@ -69,7 +72,7 @@ class OsobaFizyczna:
                 }
             },
             {
-                "Obywatelstwo": {
+                f"Obywatelstwo{suffix}": {
                     "description": "Obywatelstwo",
                     "label": "Obywatelstwo",
                     "required": True,
@@ -161,10 +164,11 @@ class AdresZamieszkania:
         self.nr_lokalu = nr_lokalu
         self.kod_pocztowy = kod_pocztowy
 
-    def get_schema():
+    def get_schema(suffix=None):
+        suffix = "" if suffix is None else f"_{suffix}"
         return [
             {
-                "KodPocztowy": {
+                f"KodPocztowy{suffix}": {
                     "description": "Kod pocztowy",
                     "label": "Kod pocztowy",
                     "required": True,
@@ -173,7 +177,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Miejscowosc": {
+                f"Miejscowosc{suffix}": {
                     "description": "Miejscowość",
                     "label": "Miejscowość",
                     "required": True,
@@ -182,7 +186,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "KodKraju": {
+                f"KodKraju{suffix}": {
                     "description": "Kod kraju",
                     "label": "Kod kraju",
                     "required": True,
@@ -191,7 +195,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Wojewodztwo": {
+                f"Wojewodztwo{suffix}": {
                     "description": "Województwo",
                     "label": "Województwo",
                     "required": True,
@@ -200,7 +204,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Powiat": {
+                f"Powiat{suffix}": {
                     "description": "Powiat",
                     "label": "Powiat",
                     "required": True,
@@ -209,7 +213,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Gmina": {
+                f"Gmina{suffix}": {
                     "description": "Gmina",
                     "label": "Gmina",
                     "required": True,
@@ -218,7 +222,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Ulica": {
+                f"Ulica{suffix}": {
                     "description": "Ulica",
                     "label": "Ulica",
                     "required": True,
@@ -227,7 +231,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "NrDomu": {
+                f"NrDomu{suffix}": {
                     "description": "Numer domu",
                     "label": "Numer domu",
                     "required": True,
@@ -236,7 +240,7 @@ class AdresZamieszkania:
                 }
             },
             {
-                "NrLokalu": {
+                f"NrLokalu{suffix}": {
                     "description": "Numer lokalu",
                     "label": "Numer lokalu",
                     "required": True,
@@ -455,13 +459,17 @@ class PCC3_6_Schema:
 
     def parse_stawka_podatku(self):
         try:
-            self.stawka_podatku = float(self.stawka_podatku)
+            if "%" in str(self.stawka_podatku):
+                self.stawka_podatku = float(self.stawka_podatku.replace("%", ""))
+            else:
+                self.stawka_podatku = float(self.stawka_podatku)
         except ValueError as err:
             raise ValueError("Invalid tax rate") from err
 
-        accepted_values = (1, 2, 0.1, 0.5, 0.2)
+        accepted_values = (1, 2, 0.1, 0.5, 0.2, 0.0)
         if self.stawka_podatku not in accepted_values:
             raise ValueError(f"Invalid tax rate (must be im {accepted_values})")
+        
         return self.stawka_podatku
 
     def parse_validate_transaction_date(
@@ -711,7 +719,7 @@ class SDZ2_6_Schema:
             "kod_urzedu": self.parse_validate_kod_urzedu(),
         }
 
-    def get_schema(self):
+    def get_schema():
         return [
             {
                 "section": {
@@ -742,7 +750,7 @@ class SDZ2_6_Schema:
                 "section": {
                     "label": "Dane osobowe osoba 1.",
                     "content": [
-                        *OsobaFizyczna.get_schema(),
+                        *OsobaFizyczna.get_schema(suffix="1"),
                     ],
                 }
             },
@@ -750,7 +758,7 @@ class SDZ2_6_Schema:
                 "section": {
                     "label": "Dane osobowe osoba 2.",
                     "content": [
-                        *OsobaFizyczna.get_schema(),
+                        *OsobaFizyczna.get_schema(suffix="2"),
                     ],
                 }
             },
@@ -758,7 +766,7 @@ class SDZ2_6_Schema:
                 "section": {
                     "label": "Adres zamieszkania osoba 1.",
                     "content": [
-                        *AdresZamieszkania.get_schema(),
+                        *AdresZamieszkania.get_schema(suffix="1"),
                     ],
                 }
             },
@@ -766,7 +774,7 @@ class SDZ2_6_Schema:
                 "section": {
                     "label": "Adres zamieszkania osoba 2.",
                     "content": [
-                        *AdresZamieszkania.get_schema(),
+                        *AdresZamieszkania.get_schema(suffix="2"),
                     ],
                 }
             },
@@ -1065,40 +1073,41 @@ zarządzania spółki kapitałowej lub jej siedziby, rzeczywistego ośrodka zarz
 def validate_json_pcc3(json_data):
     # person data:
     osoba_fizyczna = OsobaFizyczna(
-        pesel=json_data.get("Pesel"),
-        imie=json_data.get("Imie"),
-        nazwisko=json_data.get("Nazwisko"),
-        imie_ojca=json_data.get("ImieOjca"),
-        imie_matki=json_data.get("ImieMatki"),
+        pesel=json_data.get("Pesel", None),
+        imie=json_data.get("Imie", None),
+        nazwisko=json_data.get("Nazwisko", None),
+        imie_ojca=json_data.get("ImieOjca", None),
+        imie_matki=json_data.get("ImieMatki", None),
     ).parse_validate()
+    
     # Address data:
     adres_zamieszkania = AdresZamieszkania(
-        kod_kraju=json_data.get("KodKraju"),
-        wojewodztwo=json_data.get("Wojewodztwo"),
-        powiat=json_data.get("Powiat"),
-        gmina=json_data.get("Gmina"),
-        miejscowosc=json_data.get("Miejscowosc"),
-        ulica=json_data.get("Ulica"),
-        nr_domu=json_data.get("NrDomu"),
-        nr_lokalu=json_data.get("NrLokalu"),
-        kod_pocztowy=json_data.get("KodPocztowy"),
+        kod_kraju=json_data.get("KodKraju", None),
+        wojewodztwo=json_data.get("Wojewodztwo", None),
+        powiat=json_data.get("Powiat", None),
+        gmina=json_data.get("Gmina", None),
+        miejscowosc=json_data.get("Miejscowosc", None),
+        ulica=json_data.get("Ulica", None),
+        nr_domu=json_data.get("NrDomu", None),
+        nr_lokalu=json_data.get("NrLokalu", None),
+        kod_pocztowy=json_data.get("KodPocztowy", None),
     ).parse_validate()
 
     pcc_schema = PCC3_6_Schema(
-        transaction_date=json_data.get("P_4"),
-        declaration_date=json_data.get("DataZlozeniaDeklaracji"),
-        kod_urzedu=json_data.get("KodUrzedu"),
+        transaction_date=json_data.get("P_4", None),
+        declaration_date=json_data.get("DataZlozeniaDeklaracji", None),
+        kod_urzedu=json_data.get("KodUrzedu", None),
         osoba_fizyczna=osoba_fizyczna,
         adres_zamieszkania=adres_zamieszkania,
-        P_6=json_data.get("P_6"),
-        P_7=json_data.get("P_7"),
-        P_20=json_data.get("P_20"),
-        P_21=json_data.get("P_21"),
-        P_22=json_data.get("P_22"),
-        P_23=json_data.get("P_23"),
-        P_26=json_data.get("P_26"),
-        P_62=json_data.get("P_62"),
-        stawka_podatku=json_data.get("stawka_podatku"),
+        P_6=json_data.get("P_6", None),
+        P_7=json_data.get("P_7", None),
+        P_20=json_data.get("P_20", None),
+        P_21=json_data.get("P_21", None),
+        P_22=json_data.get("P_22", None),
+        P_23=json_data.get("P_23", None),
+        P_26=json_data.get("P_26", None),
+        P_62=json_data.get("P_62", None),
+        stawka_podatku=json_data.get("stawka_podatku", 2),
     ).parse_validate()
 
     out = {}
@@ -1119,43 +1128,43 @@ def validate_json_sdz2(json_data):
     out = {}
 
     osoba_fizyczna1 = OsobaFizyczna(
-        pesel=json_data.get("Pesel"),
-        imie=json_data.get("Imie"),
-        nazwisko=json_data.get("Nazwisko"),
-        imie_ojca=json_data.get("ImieOjca"),
-        imie_matki=json_data.get("ImieMatki"),
+        pesel=json_data.get("Pesel_1"),
+        imie=json_data.get("Imie_1"),
+        nazwisko=json_data.get("Nazwisko_1"),
+        imie_ojca=json_data.get("ImieOjca_1"),
+        imie_matki=json_data.get("ImieMatki_1"),
     ).parse_validate()
 
     adres_zamieszkania1 = AdresZamieszkania(
-        kod_kraju=json_data.get("KodKraju"),
-        wojewodztwo=json_data.get("Wojewodztwo"),
-        powiat=json_data.get("Powiat"),
-        gmina=json_data.get("Gmina"),
-        miejscowosc=json_data.get("Miejscowosc"),
-        ulica=json_data.get("Ulica"),
-        nr_domu=json_data.get("NrDomu"),
-        nr_lokalu=json_data.get("NrLokalu"),
-        kod_pocztowy=json_data.get("KodPocztowy"),
+        kod_kraju=json_data.get("KodKraju_1"),
+        wojewodztwo=json_data.get("Wojewodztwo_1"),
+        powiat=json_data.get("Powiat_1"),
+        gmina=json_data.get("Gmina_1"),
+        miejscowosc=json_data.get("Miejscowosc_1"),
+        ulica=json_data.get("Ulica_1"),
+        nr_domu=json_data.get("NrDomu_1"),
+        nr_lokalu=json_data.get("NrLokalu_1"),
+        kod_pocztowy=json_data.get("KodPocztowy_1"),
     ).parse_validate()
 
     osoba_fizyczna2 = OsobaFizyczna(
-        pesel=json_data.get("Pesel2"),
-        imie=json_data.get("Imie2"),
-        nazwisko=json_data.get("Nazwisko2"),
-        imie_ojca=json_data.get("ImieOjca2"),
-        imie_matki=json_data.get("ImieMatki2"),
+        pesel=json_data.get("Pesel_2"),
+        imie=json_data.get("Imie_2"),
+        nazwisko=json_data.get("Nazwisko_2"),
+        imie_ojca=json_data.get("ImieOjca_2"),
+        imie_matki=json_data.get("ImieMatki_2"),
     ).parse_validate()
 
     adres_zamieszkania2 = AdresZamieszkania(
-        kod_kraju=json_data.get("KodKraju2"),
-        wojewodztwo=json_data.get("Wojewodztwo2"),
-        powiat=json_data.get("Powiat2"),
-        gmina=json_data.get("Gmina2"),
-        miejscowosc=json_data.get("Miejscowosc2"),
-        ulica=json_data.get("Ulica2"),
-        nr_domu=json_data.get("NrDomu2"),
-        nr_lokalu=json_data.get("NrLokalu2"),
-        kod_pocztowy=json_data.get("KodPocztowy2"),
+        kod_kraju=json_data.get("KodKraju_2"),
+        wojewodztwo=json_data.get("Wojewodztwo_2"),
+        powiat=json_data.get("Powiat_2"),
+        gmina=json_data.get("Gmina_2"),
+        miejscowosc=json_data.get("Miejscowosc_2"),
+        ulica=json_data.get("Ulica_2"),
+        nr_domu=json_data.get("NrDomu_2"),
+        nr_lokalu=json_data.get("NrLokalu_2"),
+        kod_pocztowy=json_data.get("KodPocztowy_2"),
     ).parse_validate()
 
     sdz2_schema = SDZ2_6_Schema(
@@ -1193,25 +1202,23 @@ def validate_json_sdz2(json_data):
         out[key] = sdz2_schema[key]
 
     for key in osoba_fizyczna1:
-        out[key] = osoba_fizyczna1[key]
+        out["os_1" + key] = osoba_fizyczna1[key]
 
     for key in osoba_fizyczna2:
-        out[key] = osoba_fizyczna2[key]
+        out["os_2" + key] = osoba_fizyczna2[key]
 
     for key in adres_zamieszkania1:
-        out[key] = adres_zamieszkania1[key]
+        out["ad_1" + key] = adres_zamieszkania1[key]
 
     for key in adres_zamieszkania2:
-        out[key] = adres_zamieszkania2[key]
+        out["ad_2" + key] = adres_zamieszkania2[key]
 
     return out
 
 
-
-
-def generate_xml(json_schema):
+def generate_xml_sdz2(json_schema):
     try:
-        parsed_json = validate_json_pcc3(json_schema)
+        parsed_json = validate_json_sdz2(json_schema)
     except ValueError as e:
         print(e)
         return
@@ -1230,9 +1237,122 @@ def generate_xml(json_schema):
         wersjaSchemy="1-0E",
     )
     kod_formularza.text = "PCC-3"
-    for f in ("27", "46", "53"):
+    # for f in ("27", "46", "53"):
         # P_26 -- podstawa opodatkowania
-        parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
+        # parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
+
+    ET.SubElement(naglowek, "WariantFormularza").text = "6"
+    ET.SubElement(naglowek, "CelZlozenia", poz="P_7").text = str(parsed_json.get("declaration_purpose", 1))
+    if parsed_json.get("declaration_date") is not None:
+        ET.SubElement(naglowek, "Data", poz="P_5").text = parsed_json.get("declaration_date").strftime("%Y-%m-%d")
+    if parsed_json.get("kod_urzedu") is not None:
+        ET.SubElement(naglowek, "KodUrzedu").text = parsed_json.get("kod_urzedu")
+
+    # Podmiot1
+    podmiot1 = ET.SubElement(deklaracja, "Podmiot1", rola="Podatnik")
+    osoba_fizyczna1 = ET.SubElement(podmiot1, "OsobaFizyczna")
+    for key in ["pesel", "imie", "nazwisko", "data_urodzenia", "imie_ojca", "imie_matki"]:
+        if parsed_json.get("os_1" + key) is not None:
+            ET.SubElement(osoba_fizyczna1, key).text = parsed_json.get("os_1" + key)
+    
+    adres_zamieszkania1 = ET.SubElement(podmiot1, "AdresZamieszkania", rodzajAdresu="RAD")
+    adres_pol1 = ET.SubElement(adres_zamieszkania1, "AdresPol")
+    for key in ["kod_kraju", "wojewodztwo", "powiat", "gmina", "ulica", "nr_domu", "nr_lokalu", "miejscowosc", "kod_pocztowy"]:
+        if parsed_json.get("ad_1" + key) is not None:
+            ET.SubElement(adres_pol1, key).text = parsed_json.get("ad_1" + key)
+
+    # Podmiot2
+    podmiot2 = ET.SubElement(deklaracja, "Podmiot2", rola="Spadkodawca, Darczyńca lub inna osoba, od której lub po której zostały nabyte rzeczy lub prawa majątkowe")
+    osoba_fizyczna2 = ET.SubElement(podmiot2, "OsobaFizyczna")
+
+    for key in ["pesel", "imie", "nazwisko", "data_urodzenia", "imie_ojca", "imie_matki"]:
+        if parsed_json.get("os_2" + key) is not None:
+            ET.SubElement(osoba_fizyczna2, key).text = parsed_json.get("os_2" + key)
+
+    adres_zamieszkania2 = ET.SubElement(podmiot2, "AdresZamieszkania", rodzajAdresu="RAD")
+    adres_pol2 = ET.SubElement(adres_zamieszkania2, "AdresPol")
+    for key in ["kod_kraju", "wojewodztwo", "powiat", "gmina", "ulica", "nr_domu", "nr_lokalu", "miejscowosc", "kod_pocztowy"]:
+        if parsed_json.get("ad_2" + key) is not None:
+            ET.SubElement(adres_pol2, key).text = parsed_json.get("ad_2" + key)
+
+    # Pozycje szczegółowe
+    pozycje_szczegolowe = ET.SubElement(deklaracja, "PozycjeSzczegolowe")
+    for key in ["P_4", "P_40", "P_45", "P_46", "P_47", "P_48", "P_49", "P_50", "P_51", "P_52", "P_80", "P_81", "P_82", "P_87", "P_88", "P_89", "P_90", "P_91", "P_92"]:
+        if parsed_json.get(key) is not None:
+            ET.SubElement(pozycje_szczegolowe, key).text = parsed_json.get(key)
+
+    ET.SubElement(deklaracja, "Pouczenia").text = str(1)
+
+    # Tworzenie drzewa XML
+    tree = ET.ElementTree(deklaracja)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xml") as temp_file:
+        tree.write(temp_file.name, encoding="utf-8", xml_declaration=True)
+        return temp_file.name
+
+
+    # ET.SubElement(pozycje_szczegolowe, "P_4").text = parsed_json.get("P_4")
+    # ET.SubElement(pozycje_szczegolowe, "P_40").text = parsed_json.get("P_40")
+    # ET.SubElement(pozycje_szczegolowe, "P_45").text = parsed_json.get("P_45")
+    # ET.SubElement(pozycje_szczegolowe, "P_46").text = parsed_json.get("P_46")
+    # ET.SubElement(pozycje_szczegolowe, "P_47").text = parsed_json.get("P_47")
+    # ET.SubElement(pozycje_szczegolowe, "P_48").text = parsed_json.get("P_48")
+    # ET.SubElement(pozycje_szczegolowe, "P_49").text = parsed_json.get("P_49")
+    # ET.SubElement(pozycje_szczegolowe, "P_50").text = parsed_json.get("P_50")
+    # ET.SubElement(pozycje_szczegolowe, "P_51").text = parsed_json.get("P_51")
+    # ET.SubElement(pozycje_szczegolowe, "P_52").text = parsed_json.get("P_52")
+    # ET.SubElement(pozycje_szczegolowe, "P_80").text = parsed_json.get("P_80")
+    # ET.SubElement(pozycje_szczegolowe, "P_81").text = parsed_json.get("P_81")
+    # ET.SubElement(pozycje_szczegolowe, "P_82").text = parsed_json.get("P_82")
+    # ET.SubElement(pozycje_szczegolowe, "P_87").text = parsed_json.get("P_87")
+    # ET.SubElement(pozycje_szczegolowe, "P_88").text = parsed_json.get("P_88")
+    # ET.SubElement(pozycje_szczegolowe, "P_89").text = parsed_json.get("P_89")
+    # ET.SubElement(pozycje_szczegolowe, "P_90").text = parsed_json.get("P_90")
+    # ET.SubElement(pozycje_szczegolowe, "P_91").text = parsed_json.get("P_91")
+    # ET.SubElement(pozycje_szczegolowe, "P_92").text = parsed_json.get("P_92")
+
+
+
+    # person1 = parsed_json.get("person1")
+    # person2 = parsed_json.get("person2")
+
+
+    # if any(
+    #     parsed_json.get(key) is not None
+    #     for key in ["pesel", "imie", "nazwisko", "data_urodzenia", "imie_ojca", "imie_matki"]
+    # ):
+
+    # Podmiot
+
+    
+    
+
+def generate_xml(json_schema):
+    try:
+        logger.info(json_schema)
+        parsed_json = validate_json_pcc3(json_schema)
+    except ValueError as e:
+        logger.exception(e)
+        return
+
+    # print(parsed_json)
+    # Tworzenie głównego elementu
+    deklaracja = ET.Element("Deklaracja", xmlns="http://crd.gov.pl/wzor/2023/12/13/13064/")
+
+    # Nagłówek
+    naglowek = ET.SubElement(deklaracja, "Naglowek")
+    kod_formularza = ET.SubElement(
+        naglowek,
+        "KodFormularza",
+        kodSystemowy="PCC-3 (6)",
+        kodPodatku="PCC",
+        rodzajZobowiazania="Z",
+        wersjaSchemy="1-0E",
+    )
+    kod_formularza.text = "PCC-3"
+    if parsed_json.get("stawka_podatku") is not None and parsed_json.get("P_26") is not None:
+        # P_26 -- podstawa opodatkowania
+        for f in ("27", "46", "53"):
+            parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
 
     ET.SubElement(naglowek, "WariantFormularza").text = "6"
     ET.SubElement(naglowek, "CelZlozenia", poz="P_6").text = str(parsed_json.get("declaration_purpose", 1))
@@ -1242,7 +1362,6 @@ def generate_xml(json_schema):
         ET.SubElement(naglowek, "KodUrzedu").text = parsed_json.get("kod_urzedu")
 
     # Podmiot
-
     if any(
         parsed_json.get(key) is not None
         for key in ["pesel", "imie", "nazwisko", "data_urodzenia", "imie_ojca", "imie_matki"]
@@ -1338,7 +1457,7 @@ def generate_xml(json_schema):
         ET.SubElement(pozycje_szczegolowe, "P_62").text = str(parsed_json.get("P_62"))
 
     # Pouczenia
-    ET.SubElement(deklaracja, "Pouczenia").text = str(parsed_json.get("1"))
+    ET.SubElement(deklaracja, "Pouczenia").text = str(1)
 
     # Tworzenie drzewa XML
     tree = ET.ElementTree(deklaracja)
@@ -1348,37 +1467,67 @@ def generate_xml(json_schema):
 
 
 if __name__ == "__main__":
-    name = generate_xml(
+    # name = generate_xml(
+    #     {
+    #         "Pesel": "86072926288",
+    #         "P_4": "2024-09-18",
+    #         "DataZlozeniaDeklaracji": "2024-09-19",
+    #         "Imie": "Jan",
+    #         "Nazwisko": "Kowalski",
+    #         "DataUrodzenia": "1986-07-29",
+    #         "ImieOjca": "Jan",
+    #         "ImieMatki": "Maria",
+    #         "KodKraju": "PL",
+    #         "Wojewodztwo": "Małopolskie",
+    #         "Powiat": "Kraków",
+    #         "Gmina": "Kraków",
+    #         "Miejscowosc": "Kraków",
+    #         "Ulica": "Wizjonerów",
+    #         "NrDomu": "7",
+    #         "NrLokalu": "104",
+    #         "KodPocztowy": "31-356",
+    #         "P_6": "1",
+    #         "P_7": "1",
+    #         "P_20": "1",
+    #         "P_21": "1",
+    #         "P_22": "1",
+    #         "P_23": "test123",
+    #         "P_26": "1000",
+    #         "P_62": "1",
+    #         "KodUrzedu": "1234",
+    #         "stawka_podatku": 2,
+    #     }
+    # )
+    # print(name)
+    # with open(name) as file:
+    #     print(file.read())
+
+    name = generate_xml_sdz2(
         {
-            "Pesel": "86072926288",
-            "P_4": "2024-09-18",
-            "DataZlozeniaDeklaracji": "2024-09-19",
-            "Imie": "Jan",
-            "Nazwisko": "Kowalski",
-            "DataUrodzenia": "1986-07-29",
-            "ImieOjca": "Jan",
-            "ImieMatki": "Maria",
-            "KodKraju": "PL",
-            "Wojewodztwo": "Małopolskie",
-            "Powiat": "Kraków",
-            "Gmina": "Kraków",
-            "Miejscowosc": "Kraków",
-            "Ulica": "Wizjonerów",
-            "NrDomu": "7",
-            "NrLokalu": "104",
-            "KodPocztowy": "31-356",
-            "P_6": "1",
-            "P_7": "1",
-            "P_20": "1",
-            "P_21": "1",
-            "P_22": "1",
-            "P_23": "test123",
-            "P_26": "1000",
-            "P_62": "1",
-            "KodUrzedu": "1234",
-            "stawka_podatku": 2,
+            "P_4": "2024-09-04",
+            "P_40": "1",
+            "P_45": "1",
+            "P_46": "1",
+            "P_47": "1",
+            "P_48": "1",
+            "P_49": "1",
+            "P_50": "1",
+            "P_51": "1",
+            "P_52": "1",
+            "P_80": "1/3",
+            "P_81": "Bank",
+            "P_82": "123123",
+            "P_87": "123123",
+            "P_88": "3",
+            "P_89": "1",
+            "P_90": "1",
+            "P_91": "1",
+            "P_92": "1",
+            "P_93": "asdf",
+            
         }
     )
+
     print(name)
     with open(name) as file:
         print(file.read())
