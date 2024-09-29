@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React from 'react';
 import styles from "./Nav.module.scss";
 import logo from "../../assets/image/logo.png"
 import { Link } from 'react-router-dom';
@@ -6,16 +6,10 @@ import { Link } from 'react-router-dom';
 import chatIcon from "../../assets/icons/czatbot.svg";
 import knowledgeIcon from "../../assets/icons/bazawiedzy.svg";
 import homeIcon from "../../assets/icons/home.svg";
-import LangContext from '../../context/LangContext';
+import { Language, useLanguage } from '../../context/languageContext';
 
 const Nav: React.FC = () => {
-    const [lang, setLang] = useState("pl");
-    let langContext = useContext(LangContext);
-
-    useEffect(() => {
-        langContext = lang;
-        // window.location.reload();
-    }, [lang]);
+    const { language, setLanguage } = useLanguage();
 
     return (
         <nav className={styles.nav}>
@@ -25,11 +19,11 @@ const Nav: React.FC = () => {
                     <h1>JustCheckingTax</h1>
                 </Link>
                 <select name="lang" id="lang" style={{width: "90px"}} onChange={(e) => {
-                    setLang(e.target.value);
+                    setLanguage(e.target.value as Language);
                 }}>
-                    <option value="pl" selected={lang === "pl"}>PL </option>
-                    <option value="en" selected={lang === "en"}>EN </option>
-                    <option value="uk" selected={lang === "uk"}>UK </option>
+                    <option value="pl" selected={language === "pl"}>PL </option>
+                    <option value="en" selected={language === "en"}>EN </option>
+                    <option value="uk" selected={language === "uk"}>UK </option>
                 </select>
                 <ul className={styles.nav__ul}>
                     <li>
