@@ -146,12 +146,12 @@ class AIConsumer(AsyncWebsocketConsumer):
             return
 
         # Check what tax rate should be applied in the case
-        if "stawka_podatku" not in required_info:
+        if "stawka_podatku" not in obtained_info:
             tax_rate_ans = await chat_utils.compute_tax_rate(
                 message, messages_parsed, language_setting=LANG_MAP[self.lang]
             )
             logger.info(f"Tax rate answer: {tax_rate_ans}")
-            required_info.append({"StawkaPodatku": tax_rate_ans["stawka"]})
+            obtained_info.update({"StawkaPodatku": tax_rate_ans["stawka"]})
             await self.send(
                 text_data=json.dumps(
                     {
@@ -170,5 +170,5 @@ class AIConsumer(AsyncWebsocketConsumer):
             "basicFlowComplete",
             required_info=required_info,
             obtained_info=obtained_info,
-            language=LANG_MAP[self.lang],
+            language_setting=LANG_MAP[self.lang],
         )
