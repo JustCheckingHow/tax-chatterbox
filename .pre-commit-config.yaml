@@ -3,7 +3,8 @@
 
 exclude: "^\
   (frontend)|\
-  (node_modules)
+  (node_modules)|\
+  (backend/taxchatter/chat/migrations)|\
   "
 
 repos:

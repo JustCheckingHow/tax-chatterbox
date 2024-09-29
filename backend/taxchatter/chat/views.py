@@ -1,13 +1,18 @@
 import os
 import tempfile
+from datetime import timedelta
 
+from django.db.models import Count
+from django.db.models.functions import TruncHour
 from django.shortcuts import render
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .address_verification import GMAPS, all_urzedy, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
+from .models import Conversation, Intent, Message
 from .xml_generator import PCC3_6_Schema, generate_xml, validate_json_pcc3
 
 
@@ -92,3 +97,56 @@ class LocationView(APIView):
                 "all_urzedy": all_urzedy,
             }
         )
+
+
+class AdminConversationsView(APIView):
+    def get(self, request):
+        try:
+            # Get the current time and the time 24 hours ago
+            now = timezone.now()
+            day_ago = now - timedelta(days=1)
+
+            # Query for conversations in the last 24 hours
+            conversations = Conversation.objects.filter(created_at__gte=day_ago)
+
+            # Query for intents in the last 24 hours, join with Message
+            intents = Intent.objects.filter(message__conversation__in=conversations).select_related(
+                "message__conversation"
+            )
+
+            # Group by hour and intent, count messages
+            stats = (
+                intents.annotate(hour=TruncHour("message__conversation__created_at"))
+                .values("hour", "intent")
+                .annotate(count=Count("id"))
+                .order_by("hour", "intent")
+            )
+
+            # Count messages per hour
+            messages = (
+                Message.objects.filter(conversation__in=conversations)
+                .annotate(hour=TruncHour("conversation__created_at"))
+                .values("hour")
+                .annotate(count=Count("id"))
+                .order_by("hour")
+            )
+
+            # Format the data for response
+            formatted_stats = {}
+            for stat in stats:
+                hour_key = stat["hour"].isoformat()
+                intent = stat["intent"]
+                if hour_key not in formatted_stats:
+                    formatted_stats[hour_key] = {}
+                formatted_stats[hour_key][intent] = stat["count"]
+
+            messages_stats = {}
+            for stat in messages:
+                hour_key = stat["hour"].isoformat()
+                if hour_key not in messages_stats:
+                    messages_stats[hour_key] = {}
+                messages_stats[hour_key]["messages"] = stat["count"]
+
+            return Response({"stats": formatted_stats, "messages_stats": messages_stats}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
