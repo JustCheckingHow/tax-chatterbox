@@ -6,6 +6,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncHour
 from django.shortcuts import render
 from django.utils import timezone
+from loguru import logger
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,8 +19,7 @@ from .address_verification import (
 )
 from .llm_prompts.qwen import ocr_pdf
 from .models import Conversation, Intent, Message
-from .xml_generator import PCC3_6_Schema, generate_xml, validate_json_pcc3
-from loguru import logger
+from .xml_generator import PCC3_6_Schema, Sdz2_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
 
 
 def chat_page(request):
@@ -84,6 +84,12 @@ class XmlSchemaView(APIView):
             {"message": PCC3_6_Schema.get_schema()}, status=status.HTTP_200_OK
         )
 
+class XmlSchemaSdzView(APIView):
+    def get(self, request):
+        return Response(
+            {"message": Sdz2_Schema.get_schema()}, status=status.HTTP_200_OK
+        )
+
 
 class ValidateUserDataView(APIView):
     def post(self, request):
@@ -132,6 +138,24 @@ class ValidateAndInferView(APIView):
             {"message": "User data validated successfully", "data": data},
             status=status.HTTP_200_OK,
         )
+
+
+class GenerateSdzView(APIView):
+    def post(self, request):
+        data = request.data
+        try:
+            temp_file_name = generate_xml_sdz2(data)
+
+            with open(temp_file_name) as f:
+                response = Response(f.read(), content_type="application/xml")
+                response["Content-Disposition"] = (
+                    'attachment; filename="deklaracja.xml"'
+                )
+                os.remove(temp_file_name)
+                return response
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GenerateXmlView(APIView):
