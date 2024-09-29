@@ -200,7 +200,7 @@ const Chat: React.FC = () => {
           a.style.display = 'none';
           a.href = url;
           a.download = 'formularz.xml';
-          setXmlFile(url);
+          // setXmlFile(url);
         })
     } catch (error) {
       console.error(error);
