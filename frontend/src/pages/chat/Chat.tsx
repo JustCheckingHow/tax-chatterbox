@@ -73,7 +73,8 @@ const Chat: React.FC = () => {
   const [conversationKey, setConversationKey] = useState<string | null>(null);
   const [multideviceIdx, setMultideviceIdx] = useState<string | null>(null);
   const [mobileImage, setMobileImage] = useState<string | null>(null);
-
+  const [formType, setFormType] = useState<string | null>(null);
+  const [formName, setFormName] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<any>(null);
 
   const { language } = useLanguage();
@@ -90,9 +91,10 @@ const Chat: React.FC = () => {
   useEffect(() => {
     try {
       console.log(validatedInfo);
-      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/xml_schema`)
+      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/${formType}`)
         .then(response => response.json())
         .then(data => {
+          console.log(data);
           setRequiredInfo(data.message);
           let requiredInfoLength = 0;
           data.message.forEach((info: any) => {
@@ -104,7 +106,7 @@ const Chat: React.FC = () => {
     } catch (error) {
       console.error(error);
     }
-  }, [])
+  }, [formType])
 
   useEffect(() => {
     if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == null) {
@@ -156,7 +158,8 @@ const Chat: React.FC = () => {
         history: messages,
         is_necessary: isNecessary,
         language: language,
-        conversation_key: conversationKey
+        conversation_key: conversationKey,
+        form_name: formName
       }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
@@ -220,6 +223,12 @@ const Chat: React.FC = () => {
         console.log("Setting mobile image");
         setMobileImage(lastMessageData.fileBase64);
       }
+      else if (lastMessageData.command === 'formType') {
+        console.log("Form type");
+        console.log(lastMessageData.endpoint);
+        setFormType(lastMessageData.endpoint);
+        setFormName(lastMessageData.formName);
+      }
     }
   }, [lastMessage]);
 
@@ -269,6 +278,7 @@ const Chat: React.FC = () => {
                 conversation_key: conversationKey,
                 language: language,
                 obtained_info: obtainedInfo,
+                form_name: formName
               };
               sendMessage(JSON.stringify(message));
             }
@@ -363,7 +373,8 @@ return (
                   history: messages,
                   is_necessary: isNecessary,
                   language: language,
-                  conversation_key: conversationKey
+                  conversation_key: conversationKey,
+                  form_name: formName
                 };
                 setMessages(m => [...m, { message: message.text, sender: 'user', hidden: true }]);
                 sendMessage(JSON.stringify(msg));

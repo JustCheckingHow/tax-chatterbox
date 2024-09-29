@@ -6,6 +6,7 @@ from loguru import logger
 
 from . import chat_utils
 from .models import Conversation, Intent, Message, Cost
+from django.urls import resolve
 
 LANG_MAP = {
     "pl": "polsku",
@@ -20,6 +21,11 @@ UNNECESSARY_QUESTIONS = [
     "KodPocztowy",
     "UrzadSkarbowy",
 ]
+
+FORM_ENDPOINTS = {
+    "PCC-3": "xml_schema",
+    "SDZ2": "xml_schema_sdz2",
+}
 
 
 class AIConsumer(AsyncWebsocketConsumer):
@@ -58,6 +64,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         required_info=None,
         obtained_info=None,
         language_setting="pl",
+        form_name=None,
     ):
         if required_info is None:
             res, cost = await method(
@@ -120,6 +127,8 @@ class AIConsumer(AsyncWebsocketConsumer):
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
         conversation_key = text_data_json["conversation_key"]
+        form_name = text_data_json["form_name"]
+
         loop_cost = 0
         for element in required_info:
             if list(element.keys())[0] in UNNECESSARY_QUESTIONS:
@@ -180,6 +189,51 @@ class AIConsumer(AsyncWebsocketConsumer):
             await database_sync_to_async(cost_obj.save)()
             return
 
+        if form_name is None:
+            form_type = await chat_utils.recognize_form_type(message, messages_parsed)
+            cost = form_type[1]
+            form_type = form_type[0]
+            loop_cost += cost
+            
+            logger.info(f"Form type: {form_type}")
+            if form_type == "unknown":
+                await self.send_on_the_fly(
+                    chat_utils.help_choose_form_type,
+                    message,
+                    messages_parsed,
+                    "basicFlowPartial",
+                    "basicFlowComplete",
+                    language_setting=LANG_MAP[language],
+                )
+                return
+            else:
+                try:
+                    endpoint = FORM_ENDPOINTS[form_type]
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "endpoint": endpoint,
+                                "formName": form_type,
+                                "command": "formType",
+                            }
+                        )
+                    )
+
+                    endpoint_view = resolve(f"/api/{endpoint}")
+                    request = endpoint_view.func.cls.get(None, None)
+                    required_info = request.data["message"]
+                    form_name = form_type
+                except KeyError as e:
+                    logger.error(e)
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "message": "Niestety nie obsługujemy jeszcze tego formularza",
+                                "command": "basicFlowComplete",
+                            }
+                        )
+                    )
+
         # Extract information from user message and prompt them for missing info
         answer, cost = await chat_utils.parse_info(
             message,
@@ -200,9 +254,10 @@ class AIConsumer(AsyncWebsocketConsumer):
         )
 
         # Check whether the form is even necessary
-        answer, cost = await chat_utils.verify_if_necessary(
-            message, messages_parsed, language_setting=LANG_MAP[language]
-        )
+        if is_necessary is not None:
+            answer, cost = await chat_utils.verify_if_necessary(
+                message, messages_parsed, language_setting=LANG_MAP[language]
+            )
         loop_cost += cost
         if is_necessary == "unknown" or answer == "nie wiem":
             logger.info(f"AI response: {answer}")
@@ -218,6 +273,22 @@ class AIConsumer(AsyncWebsocketConsumer):
                 "basicFlowComplete",
                 language_setting=LANG_MAP[language],
             )
+            if is_necessary == "unknown" or answer == "nie wiem":
+                logger.info(f"AI response: {answer}")
+                await self.send(
+                    text_data=json.dumps({"message": answer, "command": "isNecessary"})
+                )
+            else:
+                await self.send_on_the_fly(
+                    chat_utils.question_if_necessary,
+                    message,
+                    messages_parsed,
+                    "basicFlowPartial",
+                    "basicFlowComplete",
+                    language_setting=LANG_MAP[language],
+                )
+                return
+            
             cost_obj = Cost(conversation=conversation, cost=loop_cost)
             await database_sync_to_async(cost_obj.save)()
             return

@@ -23,7 +23,7 @@ from .address_verification import (
 )
 from .llm_prompts.qwen import get_ocr_chat_messages, ocr_pdf, submit_image
 from .models import Conversation, Intent, Message
-from .xml_generator import PCC3_6_Schema, SDZ2_6_Schema, generate_xml, validate_json_pcc3
+from .xml_generator import PCC3_6_Schema, SDZ2_6_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
 
 
 def chat_page(request):
@@ -152,7 +152,16 @@ class GenerateSdzView(APIView):
     def post(self, request):
         data = request.data
         try:
-            return Response({"message": "test"})
+            temp_file_name = generate_xml_sdz2(data)
+        
+            with open(temp_file_name) as f:
+                response = Response(f.read(), content_type="application/xml")
+                response["Content-Disposition"] = (
+                    'attachment; filename="deklaracja.xml"'
+                )
+                os.remove(temp_file_name)
+                return response
+
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

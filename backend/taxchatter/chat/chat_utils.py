@@ -8,7 +8,7 @@ from duckduckgo_search import DDGS
 from loguru import logger
 from openai import AsyncOpenAI
 
-from .llm_prompts.bielik import RULES
+from .llm_prompts.bielik import RULES, RULES_SDZ2
 
 
 def estimate_tokens(message, model="gpt-4o-2024-08-06"):
@@ -58,7 +58,9 @@ async def _get_ai_response(messages, callback=None):
         return res.choices[0].message.content.strip(), ramp_up_price(res)
 
 
-async def get_ai_response(message, history, required_info, obtained_info, callback=None, language_setting="pl"):
+async def get_ai_response(
+    message, history, required_info, obtained_info, callback=None, language_setting="pl"
+):
     system = (
         f"Jest {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Jesteś AI pomocnikiem podatnika. "
         "Zbierz informacje, które są potrzebne do wypełnienia wniosku. "
@@ -68,7 +70,7 @@ async def get_ai_response(message, history, required_info, obtained_info, callba
         "Oto informacje, które użytkownik już podał: " + str(obtained_info) + ". "
     )
     system += "Zadawaj max 3 pytania na raz. Grupuj je tematycznie, np imiona rodziców, dane osobowe, dane adresowe itp."
-    
+
     user = message
     return await _get_ai_response(
         [
@@ -117,15 +119,17 @@ async def parse_info(message, history, required_info, language_setting="pl") -> 
     return json.loads(res), cost
 
 
-async def verify_if_necessary(message, history, language_setting="pl"):
+async def verify_if_necessary(message, history, language_setting="pl", form_name=None):
     system = (
-        "Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek PCC-3. "
+        f"Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek {form_name}. "
         f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
 
+    rule = RULES if form_name == "PCC-3" else RULES_SDZ2
+
     user = (
-        f"Oto zasady kiedy trzeba, a kiedy nie trzeba wypełniać wniosku: {RULES}. Oto najnowsza wiadomość użytkownika: `{message}`. "  # noqa: E501
-        "Czy wiesz już, czy użytkownik musi wypełniać wniosek PCC-3?\n"
+        f"Oto zasady kiedy trzeba, a kiedy nie trzeba wypełniać wniosku: {rule}. Oto najnowsza wiadomość użytkownika: `{message}`. "  # noqa: E501
+        "Czy wiesz już, czy użytkownik musi wypełniać wniosek {form_name}?\n"
         "Odpowiedz tylko i wyłącznie jednym z: 'musi', 'nie musi', 'nie wiem'. Twoja odpowiedź będzie automatycznie parsowana."  # noqa: E501
     )
 
@@ -194,7 +198,9 @@ async def compute_tax_rate(message, history, language_setting="pl"):
     return json.loads(res), cost
 
 
-async def rationale_why_not_necessary(message, history, callback=None, language_setting="pl"):
+async def rationale_why_not_necessary(
+    message, history, callback=None, language_setting="pl"
+):
     system = (
         "Jesteś AI pomocnikiem podatnika. Sprawdź, czy użytkownik musi wypełniać wniosek PCC-3. "
         f"Odpowiadaj tylko i wyłącznie po {language_setting}."
@@ -228,9 +234,12 @@ async def recognize_question(message, history, language_setting="pl"):
     )
 
     user = (
-        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". "  # noqa: E501
-        "Użytkownik pyta o coś związanego z podatkami, wgrał dokument, opisuje sytuację, wita się, czy pyta o coś niezwiązanego? \n"
-        "Odpisz tylko jednym słowem: 'pytanie', 'dokument', 'sytuacja', 'powitanie', 'inne'."
+        "Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history])
+        + ". "  # noqa: E501
+        "Użytkownik pyta o coś związanego z podatkami, wgrał dokument, opisuje sytuację, wita się, pyta o to jaki formularz ma wypełnić, czy pyta o coś niezwiązanego? \n"
+        "Odpisz tylko jednym słowem: 'pytanie', 'dokument', 'sytuacja', 'powitanie', 'formularz', 'inne'. "
+        "Przykłady: 'dostałem w spadku samochód. Jak mogę to zgłosić?': 'formularz', 'kto musi wypełniać wniosek PCC-3?': 'pytanie', 'oto umowa którą podpisałem': 'dokument', 'mam na imię Witold': 'sytuacja', 'cześć!': 'powitanie', 'Jak robi się papier?': 'inne'."
     )
 
     res, cost = await _get_ai_response(
@@ -249,7 +258,9 @@ async def refuse_to_answer(message, history, callback=None, language_setting="pl
 
     system = f"Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
     history_str = (
-        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
+        "Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history])
+        + ". \n"
     )
 
     logger.info(f"History: {history_str}")
@@ -276,12 +287,17 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
     history.append({"role": "user", "content": message})
 
     history_str = (
-        "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". \n"
+        "Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history])
+        + ". \n"
     )
 
     system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
 
-    user = history_str + "Użytkownik zadał pytanie. Przygotuj zapytanie do wyszukiwarki DuckDuckGo."
+    user = (
+        history_str
+        + "Użytkownik zadał pytanie. Przygotuj zapytanie do wyszukiwarki DuckDuckGo."
+    )
 
     query, cost = await _get_ai_response(
         [
@@ -292,10 +308,14 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
 
     ddg_results_content = []
 
-    ddg_results = DDGS().text(query + " site:podatki.gov.pl", region="pl-pl", max_results=3)
+    ddg_results = DDGS().text(
+        query + " site:podatki.gov.pl", region="pl-pl", max_results=3
+    )
     for result in ddg_results:
         markdown_content = await _scrap_website_to_markdown(result["href"])
-        ddg_results_content.append(f"---\nURL: {result['href']}\n\n{markdown_content}\n---\n")
+        ddg_results_content.append(
+            f"---\nURL: {result['href']}\n\n{markdown_content}\n---\n"
+        )
 
     content = "\n".join(ddg_results_content)
 
@@ -329,3 +349,49 @@ async def _scrap_website_to_markdown(url: str) -> str:
 
         soup = BeautifulSoup(response.text, "html.parser")
         return soup.get_text()[:10000]
+
+
+async def recognize_form_type(message, history):
+    history.append({"role": "user", "content": message})
+
+    system = "Jesteś AI pomocnikiem podatnika. Rozpoznaj typ formularza, który użytkownik chce wypełnić. "
+    history_str = (
+        "Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history])
+        + ". \n"
+    )
+    user = (
+        history_str
+        + "Użytkownik chce wypełnić formularz. Rozpoznaj jaki. Odpowiedz tylko i wyłącznie jednym słowem: 'PCC-3', 'SDZ2', 'unknown."
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    )
+    return res
+
+
+async def help_choose_form_type(message, history):
+    history.append({"role": "user", "content": message})
+
+    system = "Jesteś AI pomocnikiem podatnika. Odpowiadaj tylko i wyłącznie po {language_setting}."
+    history_str = (
+        "Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history])
+        + ". \n"
+    )
+    user = (
+        history_str
+        + f"Nie jestem pewien jaki formularz chcę wypełnić. Pomóż mi w dowiedzeniu się tego. Oto różne formularze: {RULES}, {RULES_SDZ2}"
+    )
+
+    res = await _get_ai_response(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    )
+    return res
