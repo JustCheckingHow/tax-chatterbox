@@ -6,7 +6,7 @@ const useChatterWS = (path: string) => {
   const [messages, setMessages] = useState<any[]>([]);
 
   const { sendMessage, lastMessage, readyState } = useWebSocket(`${import.meta.env.VITE_BACKEND_URL}/${path}`, {
-    onOpen: () => console.log('WebSocket connected'),
+    onOpen: () => console.log(`WebSocket connected to ${path}`),
     onClose: () => console.log('WebSocket disconnected'),
     onMessage: (event) => {
       const data = JSON.parse(event.data);
