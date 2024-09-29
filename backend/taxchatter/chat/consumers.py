@@ -6,6 +6,8 @@ from loguru import logger
 
 from . import chat_utils
 from .models import Conversation, Intent, Message
+import requests
+from django.urls import resolve
 
 LANG_MAP = {
     "pl": "polsku",
@@ -20,6 +22,11 @@ UNNECESSARY_QUESTIONS = [
     "KodPocztowy",
     "UrzadSkarbowy",
 ]
+
+FORM_ENDPOINTS = {
+    "PCC3": "xml_schema",
+    "SDZ2": "xml_schema_sdz2",
+}
 
 
 class AIConsumer(AsyncWebsocketConsumer):
@@ -119,6 +126,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
         conversation_key = text_data_json["conversation_key"]
+        form_name = text_data_json["form_name"]
 
         for element in required_info:
             if list(element.keys())[0] in UNNECESSARY_QUESTIONS:
@@ -174,6 +182,45 @@ class AIConsumer(AsyncWebsocketConsumer):
             )
             return
 
+        if form_name is None:
+            form_type = await chat_utils.recognize_form_type(message, messages_parsed)
+            if form_type == "unknown":
+                await self.send_on_the_fly(
+                    chat_utils.help_choose_form_type,
+                    message,
+                    messages_parsed,
+                    "basicFlowPartial",
+                    "basicFlowComplete",
+                    language_setting=LANG_MAP[language],
+                )
+                return
+            else:
+                try:
+                    endpoint = FORM_ENDPOINTS[form_type]
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "endpoint": endpoint,
+                                "formName": form_type,
+                                "command": "formType",
+                            }
+                        )
+                    )
+
+                    endpoint_view = resolve(f"/api/{endpoint}")
+                    request = endpoint_view.func.cls.get(None, None)
+                    required_info = request.data["message"]
+                    form_name = form_type
+                except KeyError:
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "message": "Niestety nie obsługujemy jeszcze tego formularza",
+                                "command": "basicFlowComplete",
+                            }
+                        )
+                    )
+
         # Extract information from user message and prompt them for missing info
         answer = await chat_utils.parse_info(
             message,
@@ -193,24 +240,28 @@ class AIConsumer(AsyncWebsocketConsumer):
         )
 
         # Check whether the form is even necessary
-        answer = await chat_utils.verify_if_necessary(
-            message, messages_parsed, language_setting=LANG_MAP[language]
-        )
-        if is_necessary == "unknown" or answer == "nie wiem":
-            logger.info(f"AI response: {answer}")
-            await self.send(
-                text_data=json.dumps({"message": answer, "command": "isNecessary"})
-            )
-
-            await self.send_on_the_fly(
-                chat_utils.question_if_necessary,
+        if is_necessary is not None:
+            answer = await chat_utils.verify_if_necessary(
                 message,
                 messages_parsed,
-                "basicFlowPartial",
-                "basicFlowComplete",
                 language_setting=LANG_MAP[language],
+                form_name=form_name,
             )
-            return
+            if is_necessary == "unknown" or answer == "nie wiem":
+                logger.info(f"AI response: {answer}")
+                await self.send(
+                    text_data=json.dumps({"message": answer, "command": "isNecessary"})
+                )
+            else:
+                await self.send_on_the_fly(
+                    chat_utils.question_if_necessary,
+                    message,
+                    messages_parsed,
+                    "basicFlowPartial",
+                    "basicFlowComplete",
+                    language_setting=LANG_MAP[language],
+                )
+                return
 
         # If we know that the form is not necessary, tell user why
         if answer == "nie musi" or not is_necessary:

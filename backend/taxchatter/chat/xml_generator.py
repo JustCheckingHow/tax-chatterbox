@@ -711,7 +711,7 @@ class SDZ2_6_Schema:
             "kod_urzedu": self.parse_validate_kod_urzedu(),
         }
 
-    def get_schema(self):
+    def get_schema():
         return [
             {
                 "section": {

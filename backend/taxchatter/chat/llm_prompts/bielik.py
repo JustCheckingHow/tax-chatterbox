@@ -85,3 +85,11 @@ b) na zabezpieczenie wierzytelności o wysokości nieustalonej -19 zł;
 1) podatnik powołuje się na fakt zawarcia umowy pożyczki, depozytu nieprawidłowego lub ustanowienia użytkowania nieprawidłowego albo ich zmiany, a należny podatek od tych czynności nie został zapłacony;
 2) biorący pożyczkę, o którym mowa w art. 9 czynności cywilnoprawne zwolnione od podatku pkt 10 lit. b, powołuje się na fakt zawarcia umowy pożyczki, a nie spełnił warunku udokumentowania otrzymania pieniędzy na rachunek bankowy, albo jego rachunek prowadzony przez spółdzielczą kasę oszczędnościowo-kredytową lub przekazem pocztowym.
 """  # noqa: E501
+
+
+RULES_SDZ2 = """
+W celu skorzystania ze zwolnienia od zapłaty podatku, należy zgłosić fakt otrzymania darowizny do właściwego urzędu skarbowego na formularzu SD-Z2, w ciągu 6 miesięcy od nabycia spadku/darowizny.
+
+Natomiast w sytuacji, gdy otrzymana darowizna przekroczy wartość zwolnioną od podatku, konieczne jest złożenie wniosku SD-Z2 w ciągu miesiąca od dnia nabycia spadku/darowizny.
+
+"""
