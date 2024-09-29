@@ -5,6 +5,7 @@ import os
 import tempfile
 
 from dotenv import load_dotenv
+from loguru import logger
 from openai import OpenAI
 from pdf2image import convert_from_path
 from PIL import Image
@@ -107,13 +108,12 @@ def preproc_img(image_path, img_size: int = 900):
 def ocr_pdf(pdf_path: str, img_size: int = 900, pdf_dpi: int = 500):
     pages = convert_from_path(pdf_path, pdf_dpi)
     ocr_pages = []
-    import time
 
     for _, page in enumerate(pages):
+        logger.info(f"Processing page {_} of {len(pages)}")
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             page.save(temp_file, "JPEG")
             response = submit_image(temp_file.name, img_msg=get_ocr_chat_messages, img_size=img_size)
-            time.sleep(2)
             ocr_pages.append(response)
     return ocr_pages
 

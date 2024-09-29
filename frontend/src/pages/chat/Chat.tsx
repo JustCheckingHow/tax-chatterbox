@@ -231,7 +231,6 @@ const Chat: React.FC = () => {
             </div>
           ) : <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <ChatDocUploader sendMessage={
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (message: any) => {
                 const msg = {
                   command: 'basicFlow',
@@ -239,10 +238,12 @@ const Chat: React.FC = () => {
                   required_info: requiredInfo,
                   obtained_info: obtainedInfo,
                   history: messages,
-                  is_necessary: isNecessary
+                  is_necessary: isNecessary,
+                  language: language
                 };
                 setMessages(m => [...m, { message: message.text, sender: 'user', hidden: true }]);
                 sendMessage(JSON.stringify(msg));
+                setIsLoading(true);
               }
             } />
             <p onClick={() => { setView('') }}>Wróć</p>
