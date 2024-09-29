@@ -171,7 +171,8 @@ const Chat: React.FC = () => {
         })
       }).then(response => response.json())
         .then(data => {
-          setObtainedInfo({...obtainedInfo, ...data.message});
+          console.log(data);
+          // setObtainedInfo({...obtainedInfo, ...data.message});
         })
     }
   };
@@ -179,7 +180,6 @@ const Chat: React.FC = () => {
   React.useEffect(() => {
     if (lastMessage) {
       const lastMessageData = JSON.parse(lastMessage.data);
-      console.log(lastMessageData);
       if (lastMessageData.command === 'basicFlowComplete') {
         setMessages(m => [...m, { message: lastMessageData.message, sender: 'ai' }]);
         setNewestMessage(null);
