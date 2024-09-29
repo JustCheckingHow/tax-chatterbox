@@ -80,16 +80,7 @@ const Chat: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    setValidatedInfo(true);
-    requiredInfo.forEach((info: string) => {
-      if (!obtainedInfo[info]) {
-        setValidatedInfo(false);
-      }
-    })
-  }, [requiredInfo]);
-
-  useEffect(() => {
-    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy) {
+    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == '') {
       fetch(`${import.meta.env.VITE_BACKEND_URL}/api/closestUrzad`, {
         method: 'POST',
         headers: {
@@ -105,8 +96,22 @@ const Chat: React.FC = () => {
           setAllUrzedy(data.all_urzedy);
         })
     }
-  }, [validatedInfo, obtainedInfo]);
+    else {
+      setClosestUrzad([]);
+      setAllUrzedy([]);
+    }
+    let isValid = true;
+    requiredInfo.forEach((info: string) => {
+      if (!obtainedInfo[info] || obtainedInfo[info] === '') {
+        isValid = false;
+      }
+    });
+    setValidatedInfo(isValid);
 
+    if (validatedInfo) {
+      generateXml();
+    }
+  }, [requiredInfo, obtainedInfo]);
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?lang=pl');
@@ -181,7 +186,6 @@ const Chat: React.FC = () => {
           a.style.display = 'none';
           a.href = url;
           a.download = 'formularz.xml';
-          document.body.appendChild(a);
           setXmlFile(url);
         })
     } catch (error) {
