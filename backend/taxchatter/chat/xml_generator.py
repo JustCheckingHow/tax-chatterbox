@@ -462,7 +462,7 @@ class PCC3_6_Schema:
         except ValueError as err:
             raise ValueError("Invalid tax rate") from err
 
-        accepted_values = (1, 2, 0.1, 0.5, 0.2)
+        accepted_values = (1, 2, 0.1, 0.5, 0.2, 0.0)
         if self.stawka_podatku not in accepted_values:
             raise ValueError(f"Invalid tax rate (must be im {accepted_values})")
         return self.stawka_podatku
@@ -1343,9 +1343,10 @@ def generate_xml(json_schema):
         wersjaSchemy="1-0E",
     )
     kod_formularza.text = "PCC-3"
-    for f in ("27", "46", "53"):
+    if parsed_json.get("stawka_podatku") is not None and parsed_json.get("P_26") is not None:
         # P_26 -- podstawa opodatkowania
-        parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
+        for f in ("27", "46", "53"):
+            parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
 
     ET.SubElement(naglowek, "WariantFormularza").text = "6"
     ET.SubElement(naglowek, "CelZlozenia", poz="P_6").text = str(parsed_json.get("declaration_purpose", 1))
