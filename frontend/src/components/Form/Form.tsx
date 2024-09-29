@@ -23,7 +23,7 @@ interface formProps {
 
 const Form: React.FC<formProps> = ({ required_info, obtained_info, setObtainedInfo }) => {
   const renderField = (name: string, field: FieldInfo) => {
-    if (field.visible === false) return null;
+    // if (field.visible === false) return null;
 
     const val = obtained_info[name] || '';
     const isChecked = val !== '';

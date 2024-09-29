@@ -1,6 +1,11 @@
 {
   "dependencies": {
+    "dompurify": "^3.1.7",
+    "marked": "^14.1.2",
     "react-use-websocket": "^4.8.1",
     "sass": "^1.79.4"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^3.0.5"
   }
 }

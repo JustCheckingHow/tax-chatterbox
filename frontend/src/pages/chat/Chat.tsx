@@ -16,9 +16,10 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
-import { useLanguage } from '../../context/languageContext.ts';
-import Form from '../../components/Form/Form.tsx';
-
+import { useLanguage } from '../../context/languageContext';
+import Form from '../../components/Form/Form';
+import DOMPurify from 'dompurify';
+import { marked } from 'marked';
 
 interface Message {
   message: string;
@@ -40,29 +41,21 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   }
 
   const renderMessage = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-    return parts.map((part, index) =>
-      urlRegex.test(part) ? (
-        <a key={index} href={part} target="_blank" rel="noopener noreferrer">
-          {part}
-        </a>
-      ) : (
-        part
-      )
+    const rawHtml = marked(text);
+    const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+    return (
+      <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
+        {senderName != '' && <div className={styles.chat__message__author}>
+          {senderName === 'AI' && <img src={logo} alt="logo" />}
+        </div>}
+        <div className={styles.chat__message__content}>
+          <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+        </div>
+      </li>
     );
   };
 
-  return (
-    <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
-      {senderName != '' && <div className={styles.chat__message__author}>
-        {senderName === 'AI' && <img src={logo} alt="logo" />}
-      </div>}
-      <div className={styles.chat__message__content}>
-        {renderMessage(message)}
-      </div>
-    </li>
-  )
+  return renderMessage(message);
 }
 
 const Chat: React.FC = () => {
@@ -78,8 +71,6 @@ const Chat: React.FC = () => {
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [conversationKey, setConversationKey] = useState<string | null>(null);
-  const [requiredInfoLength, setRequiredInfoLength] = useState<number>(0);
-  const [progress, setProgress] = useState<number>(0);
   const [multideviceIdx, setMultideviceIdx] = useState<string | null>(null);
   const [mobileImage, setMobileImage] = useState<string | null>(null);
 
@@ -109,7 +100,6 @@ const Chat: React.FC = () => {
               requiredInfoLength++;
             }
           });
-          setRequiredInfoLength(requiredInfoLength);
         })
     } catch (error) {
       console.error(error);
@@ -147,7 +137,6 @@ const Chat: React.FC = () => {
         progress++;
       }
     });
-    setProgress(progress);
     setValidatedInfo(isValid);
 
     if (validatedInfo) {
@@ -283,16 +272,13 @@ const Chat: React.FC = () => {
               };
               sendMessage(JSON.stringify(message));
             }
-            setProgress(100);
           });
         } else {
           console.error('Upload failed');
-          setProgress(0);
           }
         })
         .catch(error => {
           console.error('Upload error:', error);
-          setProgress(0);
         })
         .finally(() => {
           setIsLoading(false);
@@ -338,12 +324,11 @@ return (
       <div className={styles.chat__progress}>
         <div
           className={styles.chat__progress__item}
-          style={{ width: `${(progress / requiredInfoLength) * 100}%` }}
+          style={{ width: `100%` }}
         >
 
         </div>
         <span className={styles.chat__progress__item__text}>
-          {((progress / requiredInfoLength) * 100).toFixed(2)}%
         </span>
       </div>
       <div className={styles.chat__wrapper}>
@@ -365,12 +350,6 @@ return (
                 heading={"Wgraj umowę z telefonu"}
                 content={"Zrób zdjęcie umowy i wgraj je tutaj."}
                 qr={qrCode}
-              />
-              <GridItem
-                onClick={() => { }}
-                icon={voiceIcon}
-                heading={"Porozmawiaj z asystentem"}
-                content={"Porozmawiaj z asystentem i opisz mu swoją sytuację. JustCheckingTax Ci pomoże."}
               />
             </div>
           ) : <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>

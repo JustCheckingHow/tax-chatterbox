@@ -1,4 +1,5 @@
 import datetime
+import logging
 import tempfile
 import xml.etree.ElementTree as ET
 
@@ -1211,11 +1212,13 @@ def validate_json_sdz2(json_data):
 
 def generate_xml(json_schema):
     try:
+        logging.info(json_schema)
         parsed_json = validate_json_pcc3(json_schema)
     except ValueError as e:
         print(e)
         return
 
+    # print(parsed_json)
     # Tworzenie głównego elementu
     deklaracja = ET.Element("Deklaracja", xmlns="http://crd.gov.pl/wzor/2023/12/13/13064/")
 
@@ -1338,7 +1341,7 @@ def generate_xml(json_schema):
         ET.SubElement(pozycje_szczegolowe, "P_62").text = str(parsed_json.get("P_62"))
 
     # Pouczenia
-    ET.SubElement(deklaracja, "Pouczenia").text = str(parsed_json.get("1"))
+    ET.SubElement(deklaracja, "Pouczenia").text = str(1)
 
     # Tworzenie drzewa XML
     tree = ET.ElementTree(deklaracja)
