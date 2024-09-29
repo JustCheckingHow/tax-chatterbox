@@ -1,11 +1,21 @@
 import json
+import os
+
+from deepgram import (
+    DeepgramClient,
+    DeepgramClientOptions,
+    FileSource,
+    PrerecordedOptions,
+)
+from deepgram.utils import verboselogs
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from loguru import logger
-
 from . import chat_utils
 from .models import Conversation, Intent, Message, Cost
+import httpx
+import base64
 
 LANG_MAP = {
     "pl": "polsku",
@@ -20,6 +30,47 @@ UNNECESSARY_QUESTIONS = [
     "KodPocztowy",
     "UrzadSkarbowy",
 ]
+
+
+def base64decode(encoded_str: str):
+    decoded_bytes = base64.b64decode(encoded_str)
+    return decoded_bytes
+
+
+class MicrophoneConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        config: DeepgramClientOptions = DeepgramClientOptions(
+            verbose=verboselogs.SPAM,
+        )
+        self.deepgram = DeepgramClient(os.environ["DEEPGRAM_API_KEY"], config=config)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # if conversation is empty, delete it
+        pass
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        try:
+            payload: FileSource = {
+                "buffer": base64decode(text_data_json["buffered"]),
+            }
+            options: PrerecordedOptions = PrerecordedOptions(
+                model="nova-2",
+                smart_format=True,
+                utterances=True,
+                punctuate=True,
+                diarize=False,
+                language="pl",
+            )
+            response = self.deepgram.listen.rest.v("1").transcribe_file(
+                payload, options, timeout=httpx.Timeout(300.0, connect=10.0)
+            )  
+            transcript = response.to_json()['results']['channels'][0]['alternatives'][0]['transcript']
+
+            await self.send(text_data={"transcript": transcript})
+        except Exception as e:
+            print(f"Exception: {e}")
 
 
 class AIConsumer(AsyncWebsocketConsumer):
@@ -89,7 +140,7 @@ class AIConsumer(AsyncWebsocketConsumer):
             )
         )
         return cost
-    
+
     async def mobile_message(self, event):
         message = event["message"]
         await self.send(text_data=json.dumps(message))

@@ -12,5 +12,6 @@ openai==1.50.2
 pdf2image==1.17.0
 python-dotenv==1.0.0
 tiktoken==0.7.0
-websockets==11.0.3
+websockets>=11.0.3
 qrcode==7.4.2
+deepgram-sdk==3.7.2
