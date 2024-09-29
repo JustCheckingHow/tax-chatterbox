@@ -462,7 +462,7 @@ class PCC3_6_Schema:
         except ValueError as err:
             raise ValueError("Invalid tax rate") from err
 
-        accepted_values = (1, 2, 0.1, 0.5, 0.2)
+        accepted_values = (1, 2, 0.1, 0.5, 0.2, 0.0)
         if self.stawka_podatku not in accepted_values:
             raise ValueError(f"Invalid tax rate (must be im {accepted_values})")
         return self.stawka_podatku
