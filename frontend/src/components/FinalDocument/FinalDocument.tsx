@@ -13,9 +13,9 @@ const FinalDocument = (props: any) => {
 
             <div className={styles.finalDocument__download + " gov-file-uploader__input"}>
                 <img src={docsIcon} alt="docsIcon" />
-                <button className={styles.finalDocument__button + " btn btn-primary"}>
+                <a href={props.xmlFile} download="formularz.xml" className={styles.finalDocument__button + " btn btn-primary"}>
                     <span>Pobierz dokument</span>
-                </button>
+                </a>
             </div>
 
             <Link to="/" className={styles.finalDocument__info}>

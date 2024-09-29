@@ -41,14 +41,16 @@
             }
 
             &.checked{
-                &::before, &::after{
-                    background-color: #598527;
-                    width: 15px;
-                }
-                &::after{
-                    width: 8px;
-                    top: calc(50% + 4px);
-                    transform: translate(calc(-50% - 8px), -50%) rotate(45deg);
+                .label{
+                    &::before, &::after{
+                        background-color: #598527;
+                        width: 15px;
+                    }
+                    &::after{
+                        width: 8px;
+                        top: calc(50% + 4px);
+                        transform: translate(calc(-50% - 8px), -50%) rotate(45deg);
+                    }
                 }
             }
         }

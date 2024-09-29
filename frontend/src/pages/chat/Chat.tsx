@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -16,6 +16,7 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
+import LangContext from '../../context/LangContext.tsx';
 
 
 interface Message {
@@ -61,7 +62,9 @@ const Chat: React.FC = () => {
   const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
   const [closestUrzad, setClosestUrzad] = useState<Array<any>>([]);
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
-  const [xmlFile, setXmlFile] = useState<any>(null);
+  const [xmlFile, _] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const langContext = useContext(LangContext);
   
   useEffect(() => {
     try {
@@ -77,16 +80,7 @@ const Chat: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    setValidatedInfo(true);
-    requiredInfo.forEach((info: string) => {
-      if (!obtainedInfo[info]) {
-        setValidatedInfo(false);
-      }
-    })
-  }, [requiredInfo]);
-
-  useEffect(() => {
-    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy) {
+    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == '') {
       fetch(`${import.meta.env.VITE_BACKEND_URL}/api/closestUrzad`, {
         method: 'POST',
         headers: {
@@ -102,14 +96,25 @@ const Chat: React.FC = () => {
           setAllUrzedy(data.all_urzedy);
         })
     }
-    if(validatedInfo) {
+    else {
+      setClosestUrzad([]);
+      setAllUrzedy([]);
+    }
+    let isValid = true;
+    requiredInfo.forEach((info: string) => {
+      if (!obtainedInfo[info] || obtainedInfo[info] === '') {
+        isValid = false;
+      }
+    });
+    setValidatedInfo(isValid);
+
+    if (validatedInfo) {
       generateXml();
     }
-  }, [validatedInfo, obtainedInfo]);
-
+  }, [requiredInfo, obtainedInfo]);
 
   const [input, setInput] = useState('');
-  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
+  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?lang=pl');
 
   const handleSendMessage = () => {
     if (input.trim()) {
@@ -117,6 +122,7 @@ const Chat: React.FC = () => {
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
+      setIsLoading(true);
       // Here you would typically send the message to your backend
     }
   };
@@ -128,9 +134,11 @@ const Chat: React.FC = () => {
       if (lastMessageData.command === 'basicFlowComplete') {
         setMessages(m => [...m, { message: lastMessageData.message, sender: 'ai' }]);
         setNewestMessage(null);
+        setIsLoading(false);
       }
       else if (lastMessageData.command === 'basicFlowPartial') {
         setNewestMessage({ message: lastMessageData.message, sender: 'ai' });
+        setIsLoading(false);
       }
       else if (lastMessageData.command === 'informationParsed') {
         const newestInfo = lastMessageData.message as Record<string, string>;
@@ -178,7 +186,7 @@ const Chat: React.FC = () => {
           a.style.display = 'none';
           a.href = url;
           a.download = 'formularz.xml';
-          document.body.appendChild(a);
+          setXmlFile(url);
         })
     } catch (error) {
       console.error(error);
@@ -204,7 +212,7 @@ const Chat: React.FC = () => {
                 onClick={() => { }}
                 icon={voiceIcon}
                 heading={"Porozmawiaj z asystentem"}
-                content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
+                content={"Porozmawiaj z asystentem i opisz mu swoją sytuację. JustCheckingTax Ci pomoże."}
               />
             </div>
           ) : <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -231,6 +239,7 @@ const Chat: React.FC = () => {
                 <Message {...message} />
               </React.Fragment>
             ))}
+            {isLoading && <LoadingAnimation />}
             {newestMessage && <Message {...newestMessage} />}
           </ul>
           <form className={styles.chat__form}>
@@ -251,9 +260,9 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
-        {!validatedInfo && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
-      {xmlFile && <FinalDocument xmlFile={xmlFile} />}
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+        {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+        {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
       <Footer />
     </Box>
@@ -261,3 +270,14 @@ const Chat: React.FC = () => {
 };
 
 export default Chat;
+
+
+const LoadingAnimation: React.FC = () => {
+  return (
+    <div className={styles.loading__animation}>
+      <div className={styles.loading__animation__dot}></div>
+      <div className={styles.loading__animation__dot}></div>
+      <div className={styles.loading__animation__dot}></div>
+    </div>
+  );
+};

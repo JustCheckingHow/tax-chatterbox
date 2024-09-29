@@ -42,7 +42,7 @@
         justify-content: flex-end;
         flex: 1;
         gap: 24px;
-        overflow-y: auto;
+        overflow-y: scroll;
         max-height: 100%;
         position: relative;
         &::before{
@@ -118,6 +118,41 @@
             margin: 6px 0 0 auto;
             order: 6;
           }
+        }
+      }
+    }
+  }
+}
+
+.loading {
+  &__animation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &__dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #0052a5;
+      animation: bounce 1s infinite ease-in-out;
+      margin: 0 4px;
+
+      &:nth-child(1) {
+        animation-delay: 0s;
+      }
+      &:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      &:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes bounce {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
         }
       }
     }
