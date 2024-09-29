@@ -1,8 +1,8 @@
 import styles from './Checklist.module.scss';
 
 interface ChecklistProps {
-    required_info: { [key: string]: { description: string, required: boolean, label: string, pattern: string, type: string } }[];
-    obtained_info: { [key: string]: any };
+    required_info: { [key: string]: { description: string, required: boolean, label: string, pattern: string, type: string, content: { [key: string]: string }[] } }[];
+    obtained_info: { [key: string]: string };
 }
 
 
@@ -14,8 +14,6 @@ const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info }) =
 
                 {Object.entries(required_info).map(([_, value], index) => {
                     const label = Object.values(value)[0].label;
-                    const name = Object.keys(value)[0];
-                    const val = obtained_info[name];
                     
                     let isChecked = true;
 
