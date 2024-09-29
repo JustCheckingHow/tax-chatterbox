@@ -2,6 +2,7 @@ import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } 
 import Main from './pages/main'
 import "./assets/styles/global.scss"
 import Chat from './pages/chat'
+import Admin from './pages/admin/Admin'  // Add this import
 import { LanguageProvider } from './context/languageProvider'
 
 
@@ -11,6 +12,7 @@ function App() {
       <>
         <Route path="/" element={<Main />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/admin" element={<Admin />} />
       </>
     )
   )
