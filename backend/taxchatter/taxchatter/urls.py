@@ -28,4 +28,5 @@ urlpatterns = [
     path("api/validate_user_data", chat_views.ValidateUserDataView.as_view(), name="validate_user_data"),
     path("api/generate_xml", chat_views.GenerateXmlView.as_view(), name="generate_xml"),
     path("api/closestUrzad", chat_views.LocationView.as_view(), name="closest_urzad"),
+    path("api/validate_infer", chat_views.ValidateAndInferView.as_view(), name="validate_infer"),
 ]
