@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import httpx
+import tiktoken
 from bs4 import BeautifulSoup
 from duckduckgo_search import DDGS
 from loguru import logger
@@ -10,11 +11,16 @@ from openai import AsyncOpenAI
 from .llm_prompts.bielik import RULES
 
 
+def estimate_tokens(message, model="gpt-4o-2024-08-06"):
+    encoding = tiktoken.encoding_for_model(model)
+    return len(encoding.encode(message["content"]))
+
+
 def ramp_up_price(resp):
     usage = resp.usage
     prompt_tokens = usage.prompt_tokens * 0.001 * 3.83
     completion_tokens = usage.completion_tokens * 0.003 * 3.83
-    return prompt_tokens, completion_tokens
+    return prompt_tokens + completion_tokens
 
 
 async def _get_ai_response(messages, callback=None):
@@ -33,11 +39,14 @@ async def _get_ai_response(messages, callback=None):
             temperature=0.0,
         )
         msg = ""
+        completion_tokens = 0
         async for chunk in stream:
             if chunk.choices[0].delta.content is not None:
                 msg += chunk.choices[0].delta.content
                 await callback(msg)
-        return msg
+                completion_tokens += estimate_tokens({"content": chunk.choices[0].delta.content})
+        cost = completion_tokens * 0.003 * 3.83
+        return msg, cost
     else:
         res = await client.chat.completions.create(
             # model="speakleash/Bielik-11B-v2.3-Instruct",
@@ -45,8 +54,8 @@ async def _get_ai_response(messages, callback=None):
             messages=messages,
             temperature=0.0,
         )
-        logger.info(f"AI response: {ramp_up_price(res)}")
-        return res.choices[0].message.content.strip()
+        # logger.info(f"AI response: {ramp_up_price(res)}")
+        return res.choices[0].message.content.strip(), ramp_up_price(res)
 
 
 async def get_ai_response(message, history, required_info, obtained_info, callback=None, language_setting="pl"):
@@ -93,7 +102,7 @@ async def parse_info(message, history, required_info, language_setting="pl") -> 
         + "Wyciągnij informacje z całej rozmowy. Pamiętaj, że user może podać wiele informacji w jednej wiadomości."
     )
 
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             {"role": "user", "content": user},
@@ -105,7 +114,7 @@ async def parse_info(message, history, required_info, language_setting="pl") -> 
     # extract json from markdown
     res = res.replace("```json", "").replace("```", "").strip()
 
-    return json.loads(res)
+    return json.loads(res), cost
 
 
 async def verify_if_necessary(message, history, language_setting="pl"):
@@ -120,7 +129,7 @@ async def verify_if_necessary(message, history, language_setting="pl"):
         "Odpowiedz tylko i wyłącznie jednym z: 'musi', 'nie musi', 'nie wiem'. Twoja odpowiedź będzie automatycznie parsowana."  # noqa: E501
     )
 
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             *history,
@@ -129,7 +138,7 @@ async def verify_if_necessary(message, history, language_setting="pl"):
     )
     logger.error(res)
 
-    return res
+    return res, cost
 
 
 async def question_if_necessary(message, history, callback=None, language_setting="pl"):
@@ -143,7 +152,7 @@ async def question_if_necessary(message, history, callback=None, language_settin
         "Zadaj pytanie, które pomoże Ci ustalić czy muszę wypełniać formularz."
     )
 
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             *history,
@@ -152,7 +161,7 @@ async def question_if_necessary(message, history, callback=None, language_settin
         callback,
     )
 
-    return res
+    return res, cost
 
 
 async def compute_tax_rate(message, history, language_setting="pl"):
@@ -174,7 +183,7 @@ async def compute_tax_rate(message, history, language_setting="pl"):
         """
     )
 
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             *history,
@@ -182,7 +191,7 @@ async def compute_tax_rate(message, history, language_setting="pl"):
         ],
     )
     res = res.replace("json", "").replace("```", "").strip()
-    return json.loads(res)
+    return json.loads(res), cost
 
 
 async def rationale_why_not_necessary(message, history, callback=None, language_setting="pl"):
@@ -196,7 +205,7 @@ async def rationale_why_not_necessary(message, history, callback=None, language_
         "Wytłumacz mi dlaczego nie muszę wypełniać wniosku."
     )
     logger.error(f"Dlaczego nie muszę wypełniać wniosku {system}")
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             *history,
@@ -205,7 +214,7 @@ async def rationale_why_not_necessary(message, history, callback=None, language_
         callback=callback,
     )
 
-    return res
+    return res, cost
 
 
 async def recognize_question(message, history, language_setting="pl"):
@@ -224,7 +233,7 @@ async def recognize_question(message, history, language_setting="pl"):
         "Odpisz tylko jednym słowem: 'pytanie', 'sytuacja', 'powitanie', 'inne'."
     )
 
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             *history,
@@ -232,7 +241,7 @@ async def recognize_question(message, history, language_setting="pl"):
         ],
     )
 
-    return res
+    return res, cost
 
 
 async def refuse_to_answer(message, history, callback=None, language_setting="pl"):
@@ -250,7 +259,7 @@ async def refuse_to_answer(message, history, callback=None, language_setting="pl
         + "Użytkownik pyta o coś niezwiązanego z tematem. Grzecznie odmów odpowiedzi. Nie podaj żadnych informacji."
     )
 
-    res = await _get_ai_response(
+    res, cost = await _get_ai_response(
         [
             {"role": "system", "content": system},
             *history,
@@ -259,7 +268,7 @@ async def refuse_to_answer(message, history, callback=None, language_setting="pl
         callback=callback,
     )
 
-    return res
+    return res, cost
 
 
 async def scrap_ddgo_for_info(message, history, callback=None, language_setting="pl"):
@@ -274,7 +283,7 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
 
     user = history_str + "Użytkownik zadał pytanie. Przygotuj zapytanie do wyszukiwarki DuckDuckGo."
 
-    query = await _get_ai_response(
+    query, cost = await _get_ai_response(
         [
             {"role": "system", "content": system.format(language_setting="polsku")},
             {"role": "user", "content": user},
@@ -296,7 +305,7 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
         "Zawsze, absolutnie zawsze cytuj dokładnie źródła."
     )
 
-    res = await _get_ai_response(
+    res, cost2 = await _get_ai_response(
         [
             {
                 "role": "system",
@@ -309,7 +318,7 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
 
     logger.info(f"Answer: {res}")
 
-    return res
+    return res, cost + cost2
 
 
 async def _scrap_website_to_markdown(url: str) -> str:

@@ -38,9 +38,10 @@ class AIConsumer(AsyncWebsocketConsumer):
         required_info=None,
         obtained_info=None,
         language_setting="pl",
+        accumulator=0,
     ):
         if required_info is None:
-            res = await method(
+            res, cost = await method(
                 message,
                 history,
                 callback=lambda x: self.send(
@@ -49,7 +50,7 @@ class AIConsumer(AsyncWebsocketConsumer):
                 language_setting=language_setting,
             )
         else:
-            res = await method(
+            res, cost = await method(
                 message,
                 history,
                 required_info,
@@ -59,12 +60,22 @@ class AIConsumer(AsyncWebsocketConsumer):
                 ),
                 language_setting=language_setting,
             )
-        await self.send(text_data=json.dumps({"message": res, "command": final_command, "history": history}))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "message": res,
+                    "cost": cost,
+                    "command": final_command,
+                    "history": history,
+                }
+            )
+        )
+        return cost
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         logger.info(f"Received message: {text_data_json}")
-
+        loop_cost = 0
         message = text_data_json["text"]
         required_info = text_data_json["required_info"]
         obtained_info = text_data_json["obtained_info"]
@@ -73,10 +84,13 @@ class AIConsumer(AsyncWebsocketConsumer):
         language = text_data_json["language"]
         messages_parsed = self.parse_messages_history(messages)
 
-        intent = await chat_utils.recognize_question(message, messages_parsed, language_setting=LANG_MAP[language])
+        intent, cost = await chat_utils.recognize_question(
+            message, messages_parsed, language_setting=LANG_MAP[language]
+        )
+        loop_cost += cost
         logger.info(f"Intent: {intent}")
         if intent == "inne":
-            await self.send_on_the_fly(
+            loop_cost += await self.send_on_the_fly(
                 chat_utils.refuse_to_answer,
                 message,
                 messages_parsed,
@@ -86,7 +100,7 @@ class AIConsumer(AsyncWebsocketConsumer):
             )
             return
         elif intent == "pytanie":
-            await self.send_on_the_fly(
+            loop_cost += await self.send_on_the_fly(
                 chat_utils.scrap_ddgo_for_info,
                 message,
                 messages_parsed,
@@ -97,24 +111,28 @@ class AIConsumer(AsyncWebsocketConsumer):
             return
 
         # Extract information from user message and prompt them for missing info
-        answer = await chat_utils.parse_info(
+        answer, cost = await chat_utils.parse_info(
             message,
             messages_parsed,
             required_info,
             language_setting=LANG_MAP[language],
         )
+        loop_cost += cost
         # Remove unchanged values
         answer = {k: v for k, v in answer.items() if str(v).strip() != str(obtained_info.get(k, None)).strip()}
         obtained_info.update(answer)
         await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
 
         # Check whether the form is even necessary
-        answer = await chat_utils.verify_if_necessary(message, messages_parsed, language_setting=LANG_MAP[language])
+        answer, cost = await chat_utils.verify_if_necessary(
+            message, messages_parsed, language_setting=LANG_MAP[language]
+        )
+        loop_cost += cost
         if is_necessary == "unknown" or answer == "nie wiem":
             logger.info(f"AI response: {answer}")
             await self.send(text_data=json.dumps({"message": answer, "command": "isNecessary"}))
 
-            await self.send_on_the_fly(
+            loop_cost += await self.send_on_the_fly(
                 chat_utils.question_if_necessary,
                 message,
                 messages_parsed,
@@ -126,7 +144,7 @@ class AIConsumer(AsyncWebsocketConsumer):
 
         # If we know that the form is not necessary, tell user why
         if answer == "nie musi" or not is_necessary:
-            await self.send_on_the_fly(
+            loop_cost += await self.send_on_the_fly(
                 chat_utils.rationale_why_not_necessary,
                 message,
                 messages_parsed,
@@ -138,7 +156,7 @@ class AIConsumer(AsyncWebsocketConsumer):
 
         # Check what tax rate should be applied in the case
         if "stawka_podatku" not in obtained_info:
-            tax_rate_ans = await chat_utils.compute_tax_rate(
+            tax_rate_ans, cost = await chat_utils.compute_tax_rate(
                 message, messages_parsed, language_setting=LANG_MAP[language]
             )
             logger.info(f"Tax rate answer: {tax_rate_ans}")
@@ -151,8 +169,9 @@ class AIConsumer(AsyncWebsocketConsumer):
                     }
                 )
             )
+            loop_cost += cost
         # Send message to AI consumer
-        await self.send_on_the_fly(
+        loop_cost += await self.send_on_the_fly(
             chat_utils.get_ai_response,
             message,
             messages_parsed,
