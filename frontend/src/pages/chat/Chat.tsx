@@ -62,7 +62,7 @@ const Chat: React.FC = () => {
   const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
   const [closestUrzad, setClosestUrzad] = useState<Array<any>>([]);
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
-  const [xmlFile, setXmlFile] = useState<any>(null);
+  const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const langContext = useContext(LangContext);
   
@@ -109,7 +109,7 @@ const Chat: React.FC = () => {
 
 
   const [input, setInput] = useState('');
-  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?lang=' + (langContext ? langContext : "pl"));
+  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?lang=pl');
 
   const handleSendMessage = () => {
     if (input.trim()) {
