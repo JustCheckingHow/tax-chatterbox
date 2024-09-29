@@ -286,13 +286,8 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-<<<<<<< HEAD
-        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
-        {!validatedInfo && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
-=======
         <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
         {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
->>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
         {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
       <Footer />
