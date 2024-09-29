@@ -6,6 +6,7 @@ from loguru import logger
 
 from . import chat_utils
 from .models import Conversation, Intent, Message, Cost
+from django.urls import resolve
 
 LANG_MAP = {
     "pl": "polsku",
@@ -22,7 +23,7 @@ UNNECESSARY_QUESTIONS = [
 ]
 
 FORM_ENDPOINTS = {
-    "PCC3": "xml_schema",
+    "PCC-3": "xml_schema",
     "SDZ2": "xml_schema_sdz2",
 }
 
@@ -63,6 +64,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         required_info=None,
         obtained_info=None,
         language_setting="pl",
+        form_name=None,
     ):
         if required_info is None:
             res, cost = await method(
@@ -189,6 +191,11 @@ class AIConsumer(AsyncWebsocketConsumer):
 
         if form_name is None:
             form_type = await chat_utils.recognize_form_type(message, messages_parsed)
+            cost = form_type[1]
+            form_type = form_type[0]
+            loop_cost += cost
+            
+            logger.info(f"Form type: {form_type}")
             if form_type == "unknown":
                 await self.send_on_the_fly(
                     chat_utils.help_choose_form_type,
@@ -216,7 +223,8 @@ class AIConsumer(AsyncWebsocketConsumer):
                     request = endpoint_view.func.cls.get(None, None)
                     required_info = request.data["message"]
                     form_name = form_type
-                except KeyError:
+                except KeyError as e:
+                    logger.error(e)
                     await self.send(
                         text_data=json.dumps(
                             {
@@ -261,8 +269,9 @@ class AIConsumer(AsyncWebsocketConsumer):
                 chat_utils.question_if_necessary,
                 message,
                 messages_parsed,
+                "basicFlowPartial",
+                "basicFlowComplete",
                 language_setting=LANG_MAP[language],
-                form_name=form_name,
             )
             if is_necessary == "unknown" or answer == "nie wiem":
                 logger.info(f"AI response: {answer}")
