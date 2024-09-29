@@ -179,6 +179,7 @@ const Chat: React.FC = () => {
           a.href = url;
           a.download = 'formularz.xml';
           document.body.appendChild(a);
+          setXmlFile(url);
         })
     } catch (error) {
       console.error(error);
