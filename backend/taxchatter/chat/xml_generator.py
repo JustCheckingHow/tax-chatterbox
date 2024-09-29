@@ -3,6 +3,7 @@ import logging
 import tempfile
 import xml.etree.ElementTree as ET
 
+from loguru import logger
 
 class OsobaFizyczna:
     def __init__(
@@ -458,13 +459,17 @@ class PCC3_6_Schema:
 
     def parse_stawka_podatku(self):
         try:
-            self.stawka_podatku = float(self.stawka_podatku)
+            if "%" in str(self.stawka_podatku):
+                self.stawka_podatku = float(self.stawka_podatku.replace("%", ""))
+            else:
+                self.stawka_podatku = float(self.stawka_podatku)
         except ValueError as err:
             raise ValueError("Invalid tax rate") from err
 
         accepted_values = (1, 2, 0.1, 0.5, 0.2, 0.0)
         if self.stawka_podatku not in accepted_values:
             raise ValueError(f"Invalid tax rate (must be im {accepted_values})")
+        
         return self.stawka_podatku
 
     def parse_validate_transaction_date(
@@ -1074,6 +1079,7 @@ def validate_json_pcc3(json_data):
         imie_ojca=json_data.get("ImieOjca", None),
         imie_matki=json_data.get("ImieMatki", None),
     ).parse_validate()
+    
     # Address data:
     adres_zamieszkania = AdresZamieszkania(
         kod_kraju=json_data.get("KodKraju", None),
@@ -1322,10 +1328,10 @@ def generate_xml_sdz2(json_schema):
 
 def generate_xml(json_schema):
     try:
-        logging.info(json_schema)
+        logger.info(json_schema)
         parsed_json = validate_json_pcc3(json_schema)
     except ValueError as e:
-        print(e)
+        logger.exception(e)
         return
 
     # print(parsed_json)
@@ -1356,7 +1362,6 @@ def generate_xml(json_schema):
         ET.SubElement(naglowek, "KodUrzedu").text = parsed_json.get("kod_urzedu")
 
     # Podmiot
-
     if any(
         parsed_json.get(key) is not None
         for key in ["pesel", "imie", "nazwisko", "data_urodzenia", "imie_ojca", "imie_matki"]

@@ -173,7 +173,7 @@ class GenerateXmlView(APIView):
         data = request.data
         try:
             # Generate XML using the data
-            temp_file_name = generate_xml(data)
+            temp_file_name = generate_xml(data['data'])
 
             with open(temp_file_name) as f:
                 response = Response(f.read(), content_type="application/xml")
