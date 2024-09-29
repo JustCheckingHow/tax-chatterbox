@@ -271,7 +271,13 @@ const Chat: React.FC = () => {
                 onClick={() => { setView("uploadDoc") }}
                 icon={signIcon}
                 heading={"Prześlij umowę"}
-                content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
+                content={"System na bazie umowy sam uzupełni formularz. W przypadku braku informacji dopyta Cię o szczegóły."}
+              />
+              <GridItem
+                onClick={() => { }}
+                icon={voiceIcon}
+                heading={"Wgraj umowę z telefonu"}
+                content={"Zrób zdjęcie umowy i wgraj je tutaj."}
               />
               <GridItem
                 onClick={() => { }}
