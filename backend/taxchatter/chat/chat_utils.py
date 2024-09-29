@@ -10,6 +10,13 @@ from openai import AsyncOpenAI
 from .llm_prompts.bielik import RULES
 
 
+def ramp_up_price(resp):
+    usage = resp.usage
+    prompt_tokens = usage.prompt_tokens * 0.001 * 3.83
+    completion_tokens = usage.completion_tokens * 0.003 * 3.83
+    return prompt_tokens, completion_tokens
+
+
 async def _get_ai_response(messages, callback=None):
     client = AsyncOpenAI(
         # base_url="https://gaiuslexopenaisponsored.openai.azure.com/openai/deployments/gpt-4o",
@@ -38,6 +45,7 @@ async def _get_ai_response(messages, callback=None):
             messages=messages,
             temperature=0.0,
         )
+        logger.info(f"AI response: {ramp_up_price(res)}")
         return res.choices[0].message.content.strip()
 
 
@@ -290,7 +298,10 @@ async def scrap_ddgo_for_info(message, history, callback=None, language_setting=
 
     res = await _get_ai_response(
         [
-            {"role": "system", "content": system.format(language_setting=language_setting)},
+            {
+                "role": "system",
+                "content": system.format(language_setting=language_setting),
+            },
             {"role": "user", "content": user},
         ],
         callback=callback,

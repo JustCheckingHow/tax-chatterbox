@@ -10,7 +10,12 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .address_verification import GMAPS, all_urzedy, get_closest_urzad
+from .address_verification import (
+    GMAPS,
+    all_urzedy,
+    get_closest_urzad,
+    parse_address_components,
+)
 from .llm_prompts.qwen import ocr_pdf
 from .models import Conversation, Intent, Message
 from .xml_generator import PCC3_6_Schema, generate_xml, validate_json_pcc3
@@ -19,6 +24,26 @@ from loguru import logger
 
 def chat_page(request):
     return render(request, "chat/chat.html")
+
+
+voivodeship_name_map = {
+    "Greater Poland": "Wielkopolskie",
+    "Kuyavian-Pomeranian": "Kujawsko-Pomorskie",
+    "Lesser Poland": "Małopolskie",
+    "Łódź": "Łódzkie",
+    "Lower Silesian": "Dolnośląskie",
+    "Lublin": "Lubelskie",
+    "Lubusz": "Lubuskie",
+    "Masovian": "Mazowieckie",
+    "Opole": "Opolskie",
+    "Podlaskie": "Podlaskie",
+    "Pomeranian": "Pomorskie",
+    "Silesian": "Śląskie",
+    "Subcarpathian": "Podkarpackie",
+    "Holy Cross": "Świętokrzyskie",
+    "Warmian-Masurian": "Warmińsko-Mazurskie",
+    "West Pomeranian": "Zachodniopomorskie",
+}
 
 
 class ChatAPIView(APIView):
@@ -71,6 +96,42 @@ class ValidateUserDataView(APIView):
             )
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ValidateAndInferView(APIView):
+    def post(self, request):
+        data = request.data
+        if "Pesel" in data and ("DataUrodzenia" not in data):
+            # infer birth date from PESEL
+            year = int(data["Pesel"][:2])
+            month = data["Pesel"][2:4]
+            day = data["Pesel"][4:6]
+            if year > 20:
+                year += 1900
+            else:
+                year += 2000
+            data = {**data, "DataUrodzenia": f"{year}-{month}-{day}"}
+
+        if "KodPocztowy" in data:  # noqa: SIM102
+            if "Miejscowosc" not in data or "Powiat" not in data or "Wojewodztwo" not in data:
+                res = GMAPS.geocode(f"kod pocztowy {data['KodPocztowy']}, Polska")
+                latlon = res[0]["geometry"]["location"]
+                lat, lon = latlon["lat"], latlon["lng"]
+                address_descriptor_result = GMAPS.reverse_geocode((lat, lon), language="pl")
+                comps = parse_address_components(address_descriptor_result[0]["address_components"])
+                data = {**data, **comps}
+        if "Miejscowosc" in data:  # noqa: SIM102
+            if "Wojewodztwo" not in data or "Powiat" not in data or "KodPocztowy" not in data:
+                res = GMAPS.geocode(f"{data['Miejscowosc']}, Polska")
+                latlon = res[0]["geometry"]["location"]
+                lat, lon = latlon["lat"], latlon["lng"]
+                address_descriptor_result = GMAPS.reverse_geocode((lat, lon), language="pl")
+                comps = parse_address_components(address_descriptor_result[0]["address_components"])
+                data = {**data, **comps}
+        return Response(
+            {"message": "User data validated successfully", "data": data},
+            status=status.HTTP_200_OK,
+        )
 
 
 class GenerateXmlView(APIView):
