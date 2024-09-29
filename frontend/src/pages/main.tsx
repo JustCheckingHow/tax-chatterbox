@@ -16,9 +16,14 @@ const Main: React.FC = () => {
                   <img src="./assets/images/local/banner-foto.png" />
               </div>
               <div className="gov-banner-products__content">
-                  <h4>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed</h4>
-                  <p>Lorem ipsum dolor sit amet, consectetur ipsum dolor sit amet, consectetur adipiscing elit, sed 
-                  do eiusmod tempot dolore magna aliqua dolore magna aliqua.</p>
+                  <h4>Platforma pomocy podatkowej</h4>
+                  <p>Przejdź do funkcji czatu, aby móc zadawać pytania o formy podatkowe, 
+                      ich wypełnianie. Nasz asystent zada Ci niezbędne pytania, by ustalić dane 
+                      koeniczne do utworzenia odpowiedniego formularza podatkowego. 
+                      Możesz też załadować plik umowy, by program automatycznie 
+                      wypełnił formularz PCC-3.
+                      Po zakończeniu rozmowy otrzymasz gotowy formularz xml.
+                  </p>
                   <Link to={"/chat"} className="gov-banner-products__cta">Przejdź do czatu</Link>  
               </div>
           </div>
