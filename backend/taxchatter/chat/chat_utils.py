@@ -13,7 +13,7 @@ from .llm_prompts.bielik import RULES
 
 def estimate_tokens(message, model="gpt-4o-2024-08-06"):
     encoding = tiktoken.encoding_for_model(model)
-    return len(encoding.encode(message["content"]))
+    return len(encoding.encode(message["content"][:1000]))
 
 
 def ramp_up_price(resp):

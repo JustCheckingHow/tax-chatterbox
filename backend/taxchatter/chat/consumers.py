@@ -120,7 +120,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
         conversation_key = text_data_json["conversation_key"]
-
+        loop_cost = 0
         for element in required_info:
             if list(element.keys())[0] in UNNECESSARY_QUESTIONS:
                 required_info.remove(element)
