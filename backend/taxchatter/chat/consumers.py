@@ -254,7 +254,7 @@ class AIConsumer(AsyncWebsocketConsumer):
         )
 
         # Check whether the form is even necessary
-        if is_necessary is not None:
+        if is_necessary is None:
             answer, cost = await chat_utils.verify_if_necessary(
                 message, messages_parsed, language_setting=LANG_MAP[language]
             )
@@ -308,7 +308,7 @@ class AIConsumer(AsyncWebsocketConsumer):
             return
 
         # Check what tax rate should be applied in the case
-        if "stawka_podatku" not in obtained_info:
+        if "stawka_podatku" not in obtained_info or obtained_info["stawka_podatku"] is None or obtained_info["stawka_podatku"] == "":
             tax_rate_ans, cost = await chat_utils.compute_tax_rate(
                 message, messages_parsed, language_setting=LANG_MAP[language]
             )

@@ -184,6 +184,7 @@ class GenerateXmlView(APIView):
                 return response
 
         except Exception as e:
+            logger.exception(e)
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

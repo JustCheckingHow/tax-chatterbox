@@ -320,18 +320,24 @@ const generateXml = () => {
     fetch(`${import.meta.env.VITE_BACKEND_URL}/api/generate_xml`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         data: obtainedInfo
       })
-    }).then(response => response.blob())
-      .then(blob => {
+    }).then(response => response.json())
+      .then(data => {
+        console.log(data);
+        const blob = new Blob([data], { type: 'application/xml' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         a.download = 'formularz.xml';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
         // setXmlFile(url);
       })
   } catch (error) {

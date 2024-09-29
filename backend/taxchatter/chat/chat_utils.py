@@ -174,9 +174,15 @@ async def compute_tax_rate(message, history, language_setting="pl"):
         "Sprawdź jaka stawka podatku aplikuje się w sytuacji użytkownika"
         f"Odpowiadaj tylko i wyłącznie po {language_setting}."
     )
+    
+    history_str = (
+        f"Oto historia wiadomości: "
+        + "\n".join([f"- {msg['role']}: ```{msg['content']}```" for msg in history])
+        + ". \n"
+    )
 
     user = (
-        f"Oto zasady wyliczania podatku od umów PCC: {RULES}. Oto moja najnowsza wiadomość: `{message}`. "  # noqa: E501
+        f"Oto zasady wyliczania podatku od umów PCC: {RULES}. Oto historia wiadomości: {history_str}. Oto moja najnowsza wiadomość: `{message}`. "  # noqa: E501
         "Wytłumacz, która stawka podatku jest zastosowana w sytuacji użytkownika."
         """Koniecznie odpisz w formacie:
         {
