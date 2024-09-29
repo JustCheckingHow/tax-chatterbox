@@ -42,7 +42,7 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   const renderMessage = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
-    return parts.map((part, index) => 
+    return parts.map((part, index) =>
       urlRegex.test(part) ? (
         <a key={index} href={part} target="_blank" rel="noopener noreferrer">
           {part}
@@ -77,9 +77,10 @@ const Chat: React.FC = () => {
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [conversationKey, setConversationKey] = useState<string | null>(null);
 
   const { language } = useLanguage();
-  
+
   useEffect(() => {
     try {
       console.log(validatedInfo);
@@ -132,7 +133,15 @@ const Chat: React.FC = () => {
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo, obtained_info: obtainedInfo, history: messages, is_necessary: isNecessary, language: language }));
+      sendMessage(JSON.stringify({
+        command: 'basicFlow', text: input,
+        required_info: requiredInfo,
+        obtained_info: obtainedInfo,
+        history: messages,
+        is_necessary: isNecessary,
+        language: language,
+        conversation_key: conversationKey
+      }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
@@ -175,6 +184,9 @@ const Chat: React.FC = () => {
         else {
           setIsNecessary(true);
         }
+      }
+      else if (lastMessageData.command === 'connect') {
+        setConversationKey(lastMessageData.messageId);
       }
     }
   }, [lastMessage]);
@@ -239,7 +251,8 @@ const Chat: React.FC = () => {
                   obtained_info: obtainedInfo,
                   history: messages,
                   is_necessary: isNecessary,
-                  language: language
+                  language: language,
+                  conversation_key: conversationKey
                 };
                 setMessages(m => [...m, { message: message.text, sender: 'user', hidden: true }]);
                 sendMessage(JSON.stringify(msg));

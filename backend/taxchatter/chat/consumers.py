@@ -1,9 +1,11 @@
 import json
 
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from loguru import logger
 
 from . import chat_utils
+from .models import Conversation, Message
 
 LANG_MAP = {
     "pl": "polsku",
@@ -15,6 +17,9 @@ LANG_MAP = {
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
+
+        conversation = await database_sync_to_async(Conversation.objects.create)()
+        await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
 
     async def disconnect(self, close_code):
         pass
@@ -71,6 +76,13 @@ class AIConsumer(AsyncWebsocketConsumer):
         messages = text_data_json["history"]
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
+        conversation_key = text_data_json["conversation_key"]
+
+        conversation = await database_sync_to_async(Conversation.objects.get)(conversation_key=conversation_key)
+
+        message_obj = Message(conversation=conversation, content=message, is_user_message=True)
+        await database_sync_to_async(message_obj.save)()
+
         messages_parsed = self.parse_messages_history(messages)
 
         intent = await chat_utils.recognize_question(message, messages_parsed, language_setting=LANG_MAP[language])

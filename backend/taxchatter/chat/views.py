@@ -1,29 +1,21 @@
 import os
 import tempfile
 
+from django.db.models import Count, Max
 from django.shortcuts import render
+from loguru import logger
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .address_verification import GMAPS, all_urzedy, get_closest_urzad
 from .llm_prompts.qwen import ocr_pdf
+from .models import Conversation
 from .xml_generator import PCC3_6_Schema, generate_xml, validate_json_pcc3
 
 
 def chat_page(request):
     return render(request, "chat/chat.html")
-
-
-class ChatAPIView(APIView):
-    def get(self, request):
-        return Response({"message": "Welcome to the Chat API"}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        # Here you can handle chat messages
-        message = request.data.get("message")
-        # Process the message (you'll implement this later)
-        return Response({"response": f"You said: {message}"}, status=status.HTTP_200_OK)
 
 
 class FileUploadView(APIView):
@@ -92,3 +84,25 @@ class LocationView(APIView):
                 "all_urzedy": all_urzedy,
             }
         )
+
+
+class AdminConversationsView(APIView):
+    def get(self, request):
+        try:
+            conversations = Conversation.objects.annotate(
+                message_count=Count("messages"), last_active=Max("messages__timestamp")
+            ).values("id", "message_count", "last_active")
+
+            conversation_data = [
+                {
+                    "id": conv["id"],
+                    "messageCount": conv["message_count"],
+                    "lastActive": conv["last_active"].isoformat() if conv["last_active"] else None,
+                }
+                for conv in conversations
+            ]
+
+            return Response(conversation_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
