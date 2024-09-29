@@ -29,13 +29,15 @@ def get_closest_urzad(client, customer_addr: str):
 
 
 def determine_if_address_valid(client, addr: str):
+    print(addr)
     addressvalidation_result = client.addressvalidation(
         [addr],
         regionCode="PL",
         enableUspsCass=False,
     )
-    _ = addressvalidation_result["result"]["address"]["addressComponents"]
+    comps = addressvalidation_result["result"]["address"]["addressComponents"]
     if "hasUnconfirmedComponents" in addressvalidation_result["result"]["verdict"]:
+        print("hasUnconfirmedComponents:", addressvalidation_result["result"]["verdict"], comps)
         return False
     else:
         addres_formatted = addressvalidation_result["result"]["address"]["formattedAddress"]

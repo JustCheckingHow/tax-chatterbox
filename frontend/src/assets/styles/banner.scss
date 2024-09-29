@@ -1,0 +1,216 @@
+@font-face {
+    font-family: "gov-icons";
+    src: url('gov-icons.c2f1251b2ad097e72b25.eot');
+    src: url('gov-icons.c2f1251b2ad097e72b25.eot') format("embedded-opentype"), url('gov-icons.d03520edf421e5489785.woff') format("woff"), url('gov-icons.be2d63ef597dad2ebf15.ttf') format("truetype"), url('gov-icons.e1d3387508fe1913e361.svg') format("svg");
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+  }
+  .gov-icon {
+    font-family: "gov-icons" !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .gov-icon--account:before {
+    content: "";
+  }
+  .gov-icon--arrow-left-thin:before {
+    content: "";
+  }
+  .gov-icon--arrow-right-thin:before {
+    content: "";
+  }
+  .gov-icon--business:before {
+    content: "";
+  }
+  .gov-icon--home:before {
+    content: "";
+  }
+  .gov-icon--citizen:before {
+    content: "";
+  }
+  .gov-icon--external-big:before {
+    content: "";
+  }
+  .gov-icon--external:before {
+    content: "";
+  }
+  .gov-icon--official:before {
+    content: "";
+  }
+  .gov-icon--arrow-right-2-center:before {
+    content: "";
+  }
+  .gov-icon--arrow-left:before {
+    content: "";
+  }
+  .gov-icon--arrow-right:before {
+    content: "";
+  }
+  .gov-icon--arrow-down:before {
+    content: "";
+  }
+  .gov-icon--arrow-up:before {
+    content: "";
+  }
+  .gov-icon--file:before {
+    content: "";
+  }
+  .gov-icon--calendar:before {
+    content: "";
+  }
+  .gov-icon--map-marker:before {
+    content: "";
+  }
+  .gov-icon--search:before {
+    content: "";
+  }
+  .gov-icon--context-help:before {
+    content: "";
+  }
+  .gov-icon--success:before {
+    content: "";
+  }
+  .gov-icon--info:before {
+    content: "";
+  }
+  .gov-icon--alert:before {
+    content: "";
+  }
+  .gov-icon--close:before {
+    content: "x";
+  }
+  .gov-icon--facebook:before {
+    content: "";
+  }
+  .gov-icon--twitter:before {
+    content: "";
+  }
+  .gov-icon--instagram:before {
+    content: "";
+  }
+  .gov-icon--youtube:before {
+    content: "";
+  }
+  .gov-icon--linkedin:before {
+    content: "";
+  }
+  .gov-icon--flickr:before {
+    content: "";
+  }
+  .gov-icon--license-by:before {
+    content: "";
+  }
+  .gov-icon--license-cc:before {
+    content: "";
+  }
+  .gov-icon--midicine:before {
+    content: "";
+  }
+  .gov-icon--traffic:before {
+    content: "";
+  }
+  .gov-icon--water:before {
+    content: "";
+  }
+  .gov-icon--weather:before {
+    content: "";
+  }
+  .gov-icon--warning-other:before {
+    content: "";
+  }
+  .gov-icon--trend-rising:before {
+    content: "";
+  }
+  .gov-icon--trend-declining:before {
+    content: "";
+  }
+  .gov-icon--trend-no-change:before {
+    content: "";
+  }
+  .gov-banner-products {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: auto;
+    grid-template-areas: "image" "content";
+    grid-template-rows: auto;
+    background-color: #0052a5;
+  }
+  .gov-banner-products.gov-banner-products-image-right {
+    grid-template-areas: "content image";
+  }
+  .gov-banner-products__image {
+    font-size: 0;
+    grid-area: image;
+    overflow: hidden;
+  }
+  .gov-banner-products__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .gov-banner-products__content {
+    grid-area: content;
+    color: #fff;
+    padding: 1.375rem;
+    align-self: start;
+    line-height: 1.45;
+  }
+  .gov-banner-products__content h4,
+  .gov-banner-products__content p {
+    line-height: inherit;
+    font-size: 0.875rem;
+  }
+  .gov-banner-products__content h4 {
+    font-family: "Open Sans Bold";
+    padding: 0;
+    margin: 0;
+    margin-bottom: 0.875rem;
+  }
+  .gov-banner-products__content p {
+    font-weight: normal;
+    margin-bottom: 0.875rem;
+  }
+  .gov-banner-products__cta {
+    display: inline-block;
+    width: 100%;
+    margin: 0;
+    padding: 0.562rem 0.375rem;
+    border-radius: 4px;
+    background-color: #fff;
+    text-align: center;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-family: "Open Sans Bold";
+    color: #0052a5;
+    text-transform: uppercase;
+  }
+  @media (min-width: 80rem) {
+    .gov-banner-products {
+      grid-template-columns: repeat(2, 50%);
+      grid-template-areas: "image content";
+    }
+    .gov-banner-products__content {
+      padding: 2rem;
+    }
+    .gov-banner-products__content h4 {
+      font-size: 1.5rem;
+      line-height: normal;
+    }
+    .gov-banner-products__content p {
+      font-size: 1rem;
+      font-weight: normal;
+      line-height: 1.5;
+    }
+    .gov-banner-products__cta {
+      font-size: 1rem;
+      width: 330px;
+    }
+  }
+  
