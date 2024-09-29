@@ -85,13 +85,19 @@ class OsobaFizyczna:
         }
 
     def validate_pesel(self, pesel):
+        if pesel is None:
+            return None
+
         if len(pesel) != 11:
             raise ValueError("Invalid PESEL length")
 
         weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3, 1]
         sum = 0
-        for i in range(len(pesel) - 1):
-            sum += int(pesel[i]) * weights[i]
+        try:
+            for i in range(len(pesel) - 1):
+                sum += int(pesel[i]) * weights[i]
+        except ValueError:
+            raise ValueError("Invalid PESEL")  # noqa: B904
 
         control_sum = 10 - (sum % 10)
         if control_sum == 10:
@@ -103,6 +109,9 @@ class OsobaFizyczna:
         return pesel
 
     def get_data_urodzenia(self, pesel):
+        if pesel is None:
+            return None
+
         day = int(pesel[4:6])
         month = int(pesel[2:4])
         year = int(pesel[:2])
@@ -250,19 +259,19 @@ class AdresZamieszkania:
 class PCC3_6_Schema:
     def __init__(
         self,
-        declaration_date,
-        transaction_date,
-        kod_urzedu,
-        osoba_fizyczna,
-        adres_zamieszkania,
-        P_6,
-        P_7,
-        P_20,
-        P_21,
-        P_22,
-        P_23,
-        P_26,
-        P_62,
+        declaration_date=None,
+        transaction_date=None,
+        kod_urzedu=None,
+        osoba_fizyczna=None,
+        adres_zamieszkania=None,
+        P_6=None,
+        P_7=None,
+        P_20=None,
+        P_21=None,
+        P_22=None,
+        P_23=None,
+        P_26=None,
+        P_62=None,
     ):
         self.declaration_date = declaration_date
         self.transaction_date = transaction_date
@@ -281,97 +290,127 @@ class PCC3_6_Schema:
     def get_schema():
         return [
             {
-                "P_4": {
-                    "description": "Data Dokonania czynności",
-                    "label": "Data Dokonania czynności",
-                    "required": True,
-                    "type": "date",
-                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                "section": {
+                    "label": "Daty",
+                    "content": [
+                        {
+                            "P_4": {
+                                "description": "Data Dokonania czynności",
+                                "label": "Data Dokonania czynności",
+                                "required": True,
+                                "type": "date",
+                                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                            }
+                        },
+                        {
+                            "DataZlozeniaDeklaracji": {
+                                "description": "Data złożenia deklaracji",
+                                "label": "Data złożenia deklaracji",
+                                "required": False,
+                                "type": "date",
+                                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                            }
+                        },
+                    ],
                 }
             },
             {
-                "DataZlozeniaDeklaracji": {
-                    "description": "Data złożenia deklaracji",
-                    "label": "Data złożenia deklaracji",
-                    "required": False,
-                    "type": "date",
-                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-                }
-            },
-            *OsobaFizyczna.get_schema(),
-            *AdresZamieszkania.get_schema(),
-            {
-                "UrzadSkarbowy": {
-                    "description": "Kod Urzędu Skarbowego",
-                    "label": "Kod Urzędu Skarbowego",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[0-9]{4}$",
-                    "visible": False,
+                "section": {
+                    "label": "Dane osobowe",
+                    "content": [
+                        *OsobaFizyczna.get_schema(),
+                    ],
                 }
             },
             {
-                "P_6": {
-                    "description": "Cel złożenia deklaracji",
-                    "label": "Cel złożenia deklaracji",
-                    "required": False,
-                    "type": "string",
-                    "pattern": "^[0-9]{1}$",
+                "section": {
+                    "label": "Adres zamieszkania",
+                    "content": [
+                        *AdresZamieszkania.get_schema(),
+                    ],
                 }
             },
             {
-                "P_7": {
-                    "description": "Podmiot składający deklarację 1 - podmiot zobowiązany solidarnie do zapłaty podatku, 5 - inny podmiot",  # noqa: E501
-                    "label": "Podmiot składający deklarację",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[0-9]{1}$",
-                }
-            },
-            {
-                "P_20": {
-                    "description": "Przedmiot opatkowania 1 - umowa",
-                    "label": "Przedmiot opatkowania",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[0-9]{1}$",
-                }
-            },
-            {
-                "P_21": {
-                    "description": "Miejsce położenia rzeczy 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",
-                    "label": "Miejsce położenia rzeczy",
-                    "required": False,
-                    "type": "string",
-                    "pattern": "^[0-9]{1}$",
-                }
-            },
-            {
-                "P_22": {
-                    "description": "Miejsce położenia CWC 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",
-                    "label": "Miejsce położenia CWC",
-                    "required": False,
-                    "type": "string",
-                    "pattern": "^[0-9]{1}$",
-                }
-            },
-            {"P_23": {"description": "Opis", "label": "Opis", "required": True, "type": "string"}},
-            {
-                "P_26": {
-                    "description": "Podstawa opatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)",  # noqa: E501
-                    "label": "Podstawa opatkowania",
-                    "required": True,
-                    "type": "number",
-                    "minimum": 1000,
-                }
-            },
-            {
-                "P_62": {
-                    "description": "Liczba osób",
-                    "label": "Liczba osób",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[0-9]{1,3}$",
+                "section": {
+                    "label": "Inne dane",
+                    "content": [
+                        {
+                            "UrzadSkarbowy": {
+                                "description": "Kod Urzędu Skarbowego",
+                                "label": "Kod Urzędu Skarbowego",
+                                "required": True,
+                                "type": "string",
+                                "pattern": "^[0-9]{4}$",
+                                "visible": False,
+                            }
+                        },
+                        {
+                            "P_6": {
+                                "description": "Cel złożenia deklaracji",
+                                "label": "Cel złożenia deklaracji",
+                                "required": False,
+                                "type": "string",
+                                "pattern": "^[0-9]{1}$",
+                                "visible": False,
+                            }
+                        },
+                        {
+                            "P_7": {
+                                "description": "Podmiot składający deklarację 1 - podmiot zobowiązany solidarnie do zapłaty podatku, 5 - inny podmiot",  # noqa: E501
+                                "label": "Podmiot składający deklarację",
+                                "required": True,
+                                "type": "string",
+                                "pattern": "^[0-9]{1}$",
+                            }
+                        },
+                        {
+                            "P_20": {
+                                "description": "Przedmiot opodatkowania 1 - umowa",
+                                "label": "Przedmiot opodatkowania",
+                                "required": True,
+                                "type": "string",
+                                "pattern": "^[0-9]{1}$",
+                                "visible": False,
+                            }
+                        },
+                        {
+                            "P_21": {
+                                "description": "Miejsce położenia rzeczy 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",  # noqa: E501
+                                "label": "Miejsce położenia rzeczy",
+                                "required": False,
+                                "type": "string",
+                                "pattern": "^[0-9]{1}$",
+                            }
+                        },
+                        {
+                            "P_22": {
+                                "description": "Miejsce położenia CWC 0 - nie dotyczy, 1 - w Polsce, 2 - poza granicą państwa",  # noqa: E501
+                                "label": "Miejsce położenia CWC",
+                                "required": False,
+                                "type": "string",
+                                "pattern": "^[0-9]{1}$",
+                            }
+                        },
+                        {"P_23": {"description": "Opis", "label": "Opis", "required": True, "type": "string"}},
+                        {
+                            "P_26": {
+                                "description": "Podstawa opodatkowania określona zgodnie z art. 6 ustawy (po zaokrągleniu do pełnych złotych)",  # noqa: E501
+                                "label": "Podstawa opodatkowania",
+                                "required": True,
+                                "type": "number",
+                                "minimum": 1000,
+                            }
+                        },
+                        {
+                            "P_62": {
+                                "description": "Liczba osób",
+                                "label": "Liczba osób",
+                                "required": True,
+                                "type": "string",
+                                "pattern": "^[0-9]{1,3}$",
+                            }
+                        },
+                    ],
                 }
             },
         ]
@@ -405,6 +444,8 @@ class PCC3_6_Schema:
     def parse_validate_transaction_date(
         self,
     ):
+        if self.transaction_date is None:
+            return None
         try:
             self.transaction_date = datetime.datetime.strptime(self.transaction_date, "%Y-%m-%d")
         except ValueError:
@@ -419,6 +460,8 @@ class PCC3_6_Schema:
         return self.transaction_date
 
     def parse_validate_declaration_date(self):
+        if self.declaration_date is None:
+            return None
         try:
             self.declaration_date = datetime.datetime.strptime(self.declaration_date, "%Y-%m-%d")
         except ValueError:
@@ -430,6 +473,8 @@ class PCC3_6_Schema:
         return self.declaration_date
 
     def parse_validate_P6(self):
+        if self.P_6 is None:
+            return None
         try:
             self.P_6 = int(self.P_6)
         except ValueError:
@@ -439,6 +484,8 @@ class PCC3_6_Schema:
         raise ValueError("Invalid declaration purpose")
 
     def parse_validate_P7(self):
+        if self.P_7 is None:
+            return None
         try:
             self.P_7 = int(self.P_7)
         except ValueError:
@@ -448,6 +495,8 @@ class PCC3_6_Schema:
         raise ValueError("Invalid declarant (must be 1 or 5)")
 
     def parse_validate_P20(self):
+        if self.P_20 is None:
+            return None
         try:
             self.P_20 = int(self.P_20)
         except ValueError:
@@ -457,6 +506,8 @@ class PCC3_6_Schema:
         raise ValueError("Invalid taxable subject (must be 1)")
 
     def parse_validate_P21(self):
+        if self.P_21 is None:
+            return None
         accepted_values = [0, 1, 2]
 
         try:
@@ -468,6 +519,8 @@ class PCC3_6_Schema:
         raise ValueError("Invalid location of the asset (must be 0, 1 or 2)")
 
     def parse_validate_P22(self):
+        if self.P_22 is None:
+            return None
         accepted_values = [0, 1, 2]
 
         try:
@@ -479,6 +532,8 @@ class PCC3_6_Schema:
         raise ValueError("Invalid location of the asset (must be 0, 1 or 2)")
 
     def parse_validate_P26(self):
+        if self.P_26 is None:
+            return None
         try:
             self.P_26 = float(self.P_26)
         except ValueError:
@@ -490,6 +545,8 @@ class PCC3_6_Schema:
         return round(self.P_26, 0)
 
     def parse_validate_P62(self):
+        if self.P_62 is None:
+            return None
         try:
             self.P_62 = int(self.P_62)
         except ValueError:
@@ -807,58 +864,107 @@ def generate_xml(json_schema):
     )
     kod_formularza.text = "PCC-3"
     ET.SubElement(naglowek, "WariantFormularza").text = "6"
-    ET.SubElement(naglowek, "CelZlozenia", poz="P_6").text = str(parsed_json.get("declaration_purpose"))
-    ET.SubElement(naglowek, "Data", poz="P_4").text = parsed_json.get("transaction_date").strftime("%Y-%m-%d")
-    ET.SubElement(naglowek, "KodUrzedu").text = parsed_json.get("kod_urzedu")
+    ET.SubElement(naglowek, "CelZlozenia", poz="P_6").text = str(parsed_json.get("declaration_purpose", 1))
+    if parsed_json.get("declaration_date") is not None:
+        ET.SubElement(naglowek, "Data", poz="P_4").text = parsed_json.get("declaration_date").strftime("%Y-%m-%d")
+    if parsed_json.get("kod_urzedu") is not None:
+        ET.SubElement(naglowek, "KodUrzedu").text = parsed_json.get("kod_urzedu")
 
     # Podmiot
-    podmiot1 = ET.SubElement(deklaracja, "Podmiot1", rola="Podatnik")
-    osoba_fizyczna = ET.SubElement(podmiot1, "OsobaFizyczna")
-    ET.SubElement(osoba_fizyczna, "PESEL").text = parsed_json.get("pesel")
-    ET.SubElement(osoba_fizyczna, "ImiePierwsze").text = parsed_json.get("imie")
-    ET.SubElement(osoba_fizyczna, "Nazwisko").text = parsed_json.get("nazwisko")
-    ET.SubElement(osoba_fizyczna, "DataUrodzenia").text = parsed_json.get("data_urodzenia").strftime("%Y-%m-%d")
-    ET.SubElement(osoba_fizyczna, "ImieOjca").text = parsed_json.get("imie_ojca")
-    ET.SubElement(osoba_fizyczna, "ImieMatki").text = parsed_json.get("imie_matki")
 
-    adres = ET.SubElement(podmiot1, "AdresZamieszkaniaSiedziby", rodzajAdresu="RAD")
-    adres_pol = ET.SubElement(adres, "AdresPol")
-    ET.SubElement(adres_pol, "KodKraju").text = parsed_json.get("kod_kraju")
-    ET.SubElement(adres_pol, "Wojewodztwo").text = parsed_json.get("wojewodztwo")
-    ET.SubElement(adres_pol, "Powiat").text = parsed_json.get("powiat")
-    ET.SubElement(adres_pol, "Gmina").text = parsed_json.get("gmina")
-    ET.SubElement(adres_pol, "Ulica").text = parsed_json.get("ulica")
-    ET.SubElement(adres_pol, "NrDomu").text = parsed_json.get("nr_domu")
-    ET.SubElement(adres_pol, "NrLokalu").text = parsed_json.get("nr_lokalu")
-    ET.SubElement(adres_pol, "Miejscowosc").text = parsed_json.get("miejscowosc")
-    ET.SubElement(adres_pol, "KodPocztowy").text = parsed_json.get("kod_pocztowy")
+    if any(
+        parsed_json.get(key) is not None
+        for key in ["pesel", "imie", "nazwisko", "data_urodzenia", "imie_ojca", "imie_matki"]
+    ):
+        podmiot1 = ET.SubElement(deklaracja, "Podmiot1", rola="Podatnik")
+        osoba_fizyczna = ET.SubElement(podmiot1, "OsobaFizyczna")
+    if parsed_json.get("pesel") is not None:
+        ET.SubElement(osoba_fizyczna, "PESEL").text = parsed_json.get("pesel")
+    if parsed_json.get("imie") is not None:
+        ET.SubElement(osoba_fizyczna, "ImiePierwsze").text = parsed_json.get("imie")
+    if parsed_json.get("nazwisko") is not None:
+        ET.SubElement(osoba_fizyczna, "Nazwisko").text = parsed_json.get("nazwisko")
+    if parsed_json.get("data_urodzenia") is not None:
+        ET.SubElement(osoba_fizyczna, "DataUrodzenia").text = parsed_json.get("data_urodzenia").strftime("%Y-%m-%d")
+    if parsed_json.get("imie_ojca") is not None:
+        ET.SubElement(osoba_fizyczna, "ImieOjca").text = parsed_json.get("imie_ojca")
+    if parsed_json.get("imie_matki") is not None:
+        ET.SubElement(osoba_fizyczna, "ImieMatki").text = parsed_json.get("imie_matki")
+
+    if any(
+        parsed_json.get(key) is not None
+        for key in [
+            "kod_kraju",
+            "wojewodztwo",
+            "powiat",
+            "gmina",
+            "ulica",
+            "nr_domu",
+            "nr_lokalu",
+            "miejscowosc",
+            "kod_pocztowy",
+        ]
+    ):
+        adres = ET.SubElement(podmiot1, "AdresZamieszkaniaSiedziby", rodzajAdresu="RAD")
+        adres_pol = ET.SubElement(adres, "AdresPol")
+    if parsed_json.get("kod_kraju") is not None:
+        ET.SubElement(adres_pol, "KodKraju").text = parsed_json.get("kod_kraju")
+    if parsed_json.get("wojewodztwo") is not None:
+        ET.SubElement(adres_pol, "Wojewodztwo").text = parsed_json.get("wojewodztwo")
+    if parsed_json.get("powiat") is not None:
+        ET.SubElement(adres_pol, "Powiat").text = parsed_json.get("powiat")
+    if parsed_json.get("gmina") is not None:
+        ET.SubElement(adres_pol, "Gmina").text = parsed_json.get("gmina")
+    if parsed_json.get("ulica") is not None:
+        ET.SubElement(adres_pol, "Ulica").text = parsed_json.get("ulica")
+    if parsed_json.get("nr_domu") is not None:
+        ET.SubElement(adres_pol, "NrDomu").text = parsed_json.get("nr_domu")
+    if parsed_json.get("nr_lokalu") is not None:
+        ET.SubElement(adres_pol, "NrLokalu").text = parsed_json.get("nr_lokalu")
+    if parsed_json.get("miejscowosc") is not None:
+        ET.SubElement(adres_pol, "Miejscowosc").text = parsed_json.get("miejscowosc")
+    if parsed_json.get("kod_pocztowy") is not None:
+        ET.SubElement(adres_pol, "KodPocztowy").text = parsed_json.get("kod_pocztowy")
 
     # P32 - stawka podatku
 
     # Pozycje szczegółowe
+
     pozycje_szczegolowe = ET.SubElement(deklaracja, "PozycjeSzczegolowe")
 
     # PODMIOT SKŁADAJACY DEKLARACJE
     # 1: "podmiot zobowiązany solidarnie do zapłaty podatku"
     # 5: "inny podmiot"
-    ET.SubElement(pozycje_szczegolowe, "P_7").text = str(parsed_json.get("P_7"))
+    # if parsed_json.get("P_7") is not None:
+    ET.SubElement(pozycje_szczegolowe, "P_7").text = str(parsed_json.get("P_7", "1"))
 
     # PRZEDMIOT OPODATKOWANIA
     # 1: Umowa
-    ET.SubElement(pozycje_szczegolowe, "P_20").text = str(parsed_json.get("P_20"))
+    if parsed_json.get("P_20") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_20").text = str(parsed_json.get("P_20"))
 
     # MIEJSCE POŁOŻENIA RZECZY LUB WYKONYWANIA PRAWA MAJĄTKOWEGO
-    ET.SubElement(pozycje_szczegolowe, "P_21").text = str(parsed_json.get("P_21"))
+    if parsed_json.get("P_21") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_21").text = str(parsed_json.get("P_21"))
 
-    ET.SubElement(pozycje_szczegolowe, "P_22").text = str(parsed_json.get("P_22"))
-    ET.SubElement(pozycje_szczegolowe, "P_23").text = str(parsed_json.get("P_23"))
+    if parsed_json.get("P_22") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_22").text = str(parsed_json.get("P_22"))
+
+    if parsed_json.get("P_23") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_23").text = str(parsed_json.get("P_23"))
+
     # ET.SubElement(pozycje_szczegolowe, "P_24").text = str(parsed_json.get("taxation_base"))
     # ET.SubElement(pozycje_szczegolowe, "P_25").text = "10"
-    ET.SubElement(pozycje_szczegolowe, "P_26").text = str(parsed_json.get("P_26"))
-    ET.SubElement(pozycje_szczegolowe, "P_27").text = str(parsed_json.get("P_27"))
-    ET.SubElement(pozycje_szczegolowe, "P_46").text = str(parsed_json.get("P_46"))
-    ET.SubElement(pozycje_szczegolowe, "P_53").text = str(parsed_json.get("P_53"))
-    ET.SubElement(pozycje_szczegolowe, "P_62").text = str(parsed_json.get("P_62"))
+    if parsed_json.get("P_26") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_26").text = str(parsed_json.get("P_26"))
+    if parsed_json.get("P_27") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_27").text = str(parsed_json.get("P_27"))
+    if parsed_json.get("P_46") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_46").text = str(parsed_json.get("P_46"))
+    # if parsed_json.get("P_53") is not None:
+    ET.SubElement(pozycje_szczegolowe, "P_53").text = str(parsed_json.get("P_53", "0"))
+    if parsed_json.get("P_62") is not None:
+        ET.SubElement(pozycje_szczegolowe, "P_62").text = str(parsed_json.get("P_62"))
 
     # Pouczenia
     ET.SubElement(deklaracja, "Pouczenia").text = str(parsed_json.get("1"))
