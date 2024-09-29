@@ -18,7 +18,9 @@ const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info, set
                     const name = Object.keys(value)[0];
                     const val = obtained_info[name];
                     const isChecked = val !== undefined;
-                    const type = value.type ? value.type : "text";
+                    // const type = value.type ? value.type : "text";
+                    const type = typeof value.type === 'string' ? value.type : "text";
+
                     return (
                         <li key={index} className={isChecked ? styles.checked : ""}>
                             <div className={styles.label + " label"}>{label}</div>
