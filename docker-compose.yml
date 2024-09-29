@@ -33,13 +33,13 @@ services:
     environment:
       - NODE_ENV=development
   
-  certbot:
-    image: certbot/certbot
-    depends_on:
-      - nginx 
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    command: ["certonly", "-v",  "-d", "justcheckinghow.com", "-d", "api.justcheckinghow.com", "--agree-tos", "--email", "wwydmanski@gmail.com", "--preferred-challenges=http", "--webroot", "--webroot-path=/var/www/certbot", "-n", "--expand", "--force-renewal", "-v"]
+#  certbot:
+ #   image: certbot/certbot
+  #  depends_on:
+  #    - nginx 
+  #  volumes:
+  #    - ./data/certbot/conf:/etc/letsencrypt
+  #    - ./data/certbot/www:/var/www/certbot
+  #  command: ["certonly", "-v",  "-d", "justcheckinghow.com", "-d", "api.justcheckinghow.com", "--agree-tos", "--email", "wwydmanski@gmail.com", "--preferred-challenges=http", "--webroot", "--webroot-path=/var/www/certbot", "-n", "--expand", "--force-renewal", "-v"]
  
 
