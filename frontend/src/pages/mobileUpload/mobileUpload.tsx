@@ -11,7 +11,7 @@ const MobileUpload: React.FC = () => {
 
   const { id } = useParams();
 
-  const { sendMessage } = useWebSocket(`http://10.250.160.94:8001/ws/v1/chat/${id}`);
+  const { sendMessage } = useWebSocket(`https://justcheckinghow.com/ws/v1/chat/${id}`);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

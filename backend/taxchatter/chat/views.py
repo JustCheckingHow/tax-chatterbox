@@ -289,7 +289,7 @@ class InitializeConversationView(APIView):
             box_size=10,
             border=4,
         )
-        qr.add_data(f"http://10.250.160.94:3000/mobileUpload/{multidevice_idx}")
+        qr.add_data(f"https://justcheckinghow.com/mobileUpload/{multidevice_idx}")
         qr.make(fit=True)
         
         img = qr.make_image(fill="black", back_color="white").get_image()
@@ -301,7 +301,7 @@ class InitializeConversationView(APIView):
             {
                 "message": "Conversation initialized successfully",
                 "multidevice_idx": multidevice_idx,
-                "url": f"http://10.250.160.94:3000/mobileUpload/{multidevice_idx}",
+                "url": f"https://justcheckinghow.com/mobileUpload/{multidevice_idx}",
                 "qr": base64_qr,
             },
             status=status.HTTP_200_OK,
