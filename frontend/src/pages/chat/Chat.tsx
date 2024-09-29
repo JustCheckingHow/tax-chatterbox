@@ -62,7 +62,7 @@ const Chat: React.FC = () => {
   const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
   const [closestUrzad, setClosestUrzad] = useState<Array<any>>([]);
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
-  const [xmlFile, _] = useState<any>(null);
+  const [xmlFile, setXmlFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const langContext = useContext(LangContext);
   
@@ -80,7 +80,7 @@ const Chat: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == '') {
+    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == null) {
       fetch(`${import.meta.env.VITE_BACKEND_URL}/api/closestUrzad`, {
         method: 'POST',
         headers: {
@@ -102,7 +102,7 @@ const Chat: React.FC = () => {
     }
     let isValid = true;
     requiredInfo.forEach((info: string) => {
-      if (!obtainedInfo[info] || obtainedInfo[info] === '') {
+      if ((!obtainedInfo[info] || obtainedInfo[info] === '')) {
         isValid = false;
       }
     });
