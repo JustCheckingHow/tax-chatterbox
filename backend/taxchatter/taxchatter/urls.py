@@ -25,9 +25,12 @@ urlpatterns = [
     path("chat", chat_views.chat_page, name="chat"),
     path("api/upload", chat_views.FileUploadView.as_view(), name="upload"),
     path("api/xml_schema", chat_views.XmlSchemaView.as_view(), name="xml_schema"),
+    path("api/xml_schema_sdz2", chat_views.XmlSchemaSdzView.as_view(), name="xml_schema_sdz2"),
     path("api/validate_user_data", chat_views.ValidateUserDataView.as_view(), name="validate_user_data"),
     path("api/generate_xml", chat_views.GenerateXmlView.as_view(), name="generate_xml"),
+    path("api/generate_sdz2", chat_views.GenerateSdzView.as_view(), name="generate_sdz2"),
     path("api/closestUrzad", chat_views.LocationView.as_view(), name="closest_urzad"),
+    path("api/initialize_conversation", chat_views.InitializeConversationView.as_view(), name="initialize_conversation"),
     path("api/validate_infer", chat_views.ValidateAndInferView.as_view(), name="validate_infer"),
     path("api/admin/conversations", AdminConversationsView.as_view(), name="admin-conversations"),
 ]

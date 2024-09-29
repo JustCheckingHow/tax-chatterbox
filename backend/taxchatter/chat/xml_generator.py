@@ -164,6 +164,24 @@ class AdresZamieszkania:
     def get_schema():
         return [
             {
+                "KodPocztowy": {
+                    "description": "Kod pocztowy",
+                    "label": "Kod pocztowy",
+                    "required": True,
+                    "type": "string",
+                    "pattern": "^[0-9]{2}-[0-9]{3}$",
+                }
+            },
+            {
+                "Miejscowosc": {
+                    "description": "Miejscowość",
+                    "label": "Miejscowość",
+                    "required": True,
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{1,30}$",
+                }
+            },
+            {
                 "KodKraju": {
                     "description": "Kod kraju",
                     "label": "Kod kraju",
@@ -200,15 +218,6 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Miejscowosc": {
-                    "description": "Miejscowość",
-                    "label": "Miejscowość",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[A-Za-z]{1,30}$",
-                }
-            },
-            {
                 "Ulica": {
                     "description": "Ulica",
                     "label": "Ulica",
@@ -233,15 +242,6 @@ class AdresZamieszkania:
                     "required": True,
                     "type": "string",
                     "pattern": "^[0-9]{1,10}$",
-                }
-            },
-            {
-                "KodPocztowy": {
-                    "description": "Kod pocztowy",
-                    "label": "Kod pocztowy",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[0-9]{2}-[0-9]{3}$",
                 }
             },
         ]
@@ -604,6 +604,13 @@ class SDZ2_6_Schema:
         P_91=None,
         P_92=None,
         P_93=None,
+        declaration_date=None,
+        transaction_date=None,
+        osoba_fizyczna_1=None,
+        osoba_fizyczna_2=None,
+        adres_zamieszkania_1=None,
+        adres_zamieszkania_2=None,
+        kod_urzedu=None,
     ):
         # P_4 - data złożenia deklaracji
         self.P4 = P4
@@ -665,6 +672,294 @@ class SDZ2_6_Schema:
         self.P_91 = P_91
         # P_92 - przekaz pocztowy
         self.P_92 = P_92
+
+        self.declaration_date = declaration_date
+        self.transaction_date = transaction_date
+        self.osoba_fizyczna_1 = osoba_fizyczna_1
+        self.osoba_fizyczna_2 = osoba_fizyczna_2
+        self.adres_zamieszkania_1 = adres_zamieszkania_1
+        self.adres_zamieszkania_2 = adres_zamieszkania_2
+        self.kod_urzedu = kod_urzedu
+
+    def parse_validate(self):
+        return {
+            "P_4": self.parse_validate_P4(),
+            "P_40": self.parse_validate_P40(),
+            "P_45": self.parse_validate_P45(),
+            "P_46": self.parse_validate_P46(),
+            "P_47": self.parse_validate_P47(),
+            "P_48": self.parse_validate_P48(),
+            "P_49": self.parse_validate_P49(),
+            "P_50": self.parse_validate_P50(),
+            "P_51": self.parse_validate_P51(),
+            "P_52": self.parse_validate_P52(),
+            "P_80": self.parse_validate_P80(),
+            "P_81": self.parse_validate_P81(),
+            "P_82": self.parse_validate_P82(),
+            "P_87": self.parse_validate_P87(),
+            "P_88": self.parse_validate_P88(),
+            "P_89": self.parse_validate_P89(),
+            "P_90": self.parse_validate_P90(),
+            "P_91": self.parse_validate_P91(),
+            "P_92": self.parse_validate_P92(),
+            "declaration_date": self.parse_validate_declaration_date(),
+            "transaction_date": self.parse_validate_transaction_date(),
+            "osoba_fizyczna_1": self.parse_validate_osoba_fizyczna_1(),
+            "osoba_fizyczna_2": self.parse_validate_osoba_fizyczna_2(),
+            "adres_zamieszkania_1": self.parse_validate_adres_zamieszkania_1(),
+            "adres_zamieszkania_2": self.parse_validate_adres_zamieszkania_2(),
+            "kod_urzedu": self.parse_validate_kod_urzedu(),
+        }
+
+    def get_schema(self):
+        return [
+            {
+                "section": {
+                    "label": "Daty",
+                    "content": [
+                        {
+                            "P_4": {
+                                "description": "Data Dokonania czynności",
+                                "label": "Data Dokonania czynności",
+                                "required": True,
+                                "type": "date",
+                                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                            }
+                        },
+                        {
+                            "DataZlozeniaDeklaracji": {
+                                "description": "Data złożenia deklaracji",
+                                "label": "Data złożenia deklaracji",
+                                "required": False,
+                                "type": "date",
+                                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                            }
+                        },
+                    ],
+                }
+            },
+            {
+                "section": {
+                    "label": "Dane osobowe osoba 1.",
+                    "content": [
+                        *OsobaFizyczna.get_schema(),
+                    ],
+                }
+            },
+            {
+                "section": {
+                    "label": "Dane osobowe osoba 2.",
+                    "content": [
+                        *OsobaFizyczna.get_schema(),
+                    ],
+                }
+            },
+            {
+                "section": {
+                    "label": "Adres zamieszkania osoba 1.",
+                    "content": [
+                        *AdresZamieszkania.get_schema(),
+                    ],
+                }
+            },
+            {
+                "section": {
+                    "label": "Adres zamieszkania osoba 2.",
+                    "content": [
+                        *AdresZamieszkania.get_schema(),
+                    ],
+                }
+            },
+            {
+                "section": {
+                    "label": "Inne dane",
+                    "content": [
+                        {
+                            "UrzadSkarbowy": {
+                                "description": "Kod Urzędu Skarbowego",
+                                "label": "Kod Urzędu Skarbowego",
+                                "required": True,
+                                "type": "string",
+                                "pattern": "^[0-9]{4}$",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_40": {
+                                "description": "Podstawa opodatkowania",
+                                "label": "Podstawa opodatkowania",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_45": {
+                                "description": "Obliczony należny podatek",
+                                "label": "Obliczony należny podatek",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_46": {
+                                "description": "Kwota należnego podatku",
+                                "label": "Kwota należnego podatku",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_47": {
+                                "description": "Typ spółki 1 spółka osobowa, 2 spółka kapitałowa",
+                                "label": "Typ spółki",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_48": {
+                                "description": "Podstawa opodatkowania dotyczy: \
+                                1 - zawarcia umowy spółki, \
+                                2 - zwiększenia majątku spółki albo podwyższenia kapitału zakładowego, \
+                                3 - dopłaty, \
+                                4 - pożyczki udzielonej spółce osobowej przez wspólnika, \
+                                5 - oddania spółce rzeczy lub praw majątkowych do nieodpłatnego używania, \
+                                6 - przekształcenia spółek, \
+                                7 - łączenia spółek, \
+                                8 - przeniesienia na terytorium Rzeczypospolitej Polskiej rzeczywistego ośrodka\
+zarządzania spółki kapitałowej lub jej siedziby, rzeczywistego ośrodka zarządzania spółki kapitałowej lub jej siedziby",
+                                "label": "Podstawa opodatkowania dotyczy",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_49": {
+                                "description": "Podstawa opodatkowania - określona zgodnie z art. 6 ust. 1 pkt 8 ustawy",
+                                "label": "Podstawa opodatkowania",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_50": {
+                                "description": "Opłaty i koszty związane z zawarciem umowy spółki lub jej zmiany - na podstawie art. 6 ust. 9 ustawy",
+                                "label": "Opłaty i koszty związane z zawarciem umowy spółki lub jej zmiany",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_51": {
+                                "description": "Podstawa obliczenia podatku",
+                                "label": "Podstawa obliczenia podatku",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_52": {
+                                "description": "Kwota należnego podatku (po zaokrągleniu do pełnych złotych)",
+                                "label": "Kwota należnego podatku",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_80": {
+                                "description": "Ułamek do jakiegoś tam",
+                                "label": "Ułamek do jakiegoś tam",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_81": {
+                                "description": "Miejsce nabycia środków",
+                                "label": "Miejsce nabycia środków",
+                                "required": True,
+                                "type": "string",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_82": {
+                                "description": "Wartość rynkowa",
+                                "label": "Wartość rynkowa",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_87": {
+                                "description": "Wartość rynkowa ta sama jak w P_82",
+                                "label": "Wartość rynkowa ta sama jak w P_82",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_88": {
+                                "description": "Stosunek pokrewieństwa",
+                                "label": "Stosunek pokrewieństwa",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_89": {
+                                "description": "Sposób przekazania pieniędzy",
+                                "label": "Sposób przekazania pieniędzy",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_90": {
+                                "description": "Sposób przekazania pieniędzy",
+                                "label": "Sposób przekazania pieniędzy",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_91": {
+                                "description": "Sposób przekazania pieniędzy",
+                                "label": "Sposób przekazania pieniędzy",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                        {
+                            "P_92": {
+                                "description": "Sposób przekazania pieniędzy",
+                                "label": "Sposób przekazania pieniędzy",
+                                "required": True,
+                                "type": "number",
+                                "visible": False,
+                            },
+                        },
+                    ],
+                }
+            },
+
+        ]
 
     def parse_validate_P4(self):
         try:
@@ -820,50 +1115,98 @@ def validate_json_pcc3(json_data):
     return out
 
 
-# def validate_json_sdz2(json_data):
-#     out = {}
+def validate_json_sdz2(json_data):
+    out = {}
 
-#     osoba_fizyczna1 = OsobaFizyczna(
-#         pesel=json_data.get("Pesel"),
-#         imie=json_data.get("Imie"),
-#         nazwisko=json_data.get("Nazwisko"),
-#         imie_ojca=json_data.get("ImieOjca"),
-#         imie_matki=json_data.get("ImieMatki"),
-#     ).parse_validate()
+    osoba_fizyczna1 = OsobaFizyczna(
+        pesel=json_data.get("Pesel"),
+        imie=json_data.get("Imie"),
+        nazwisko=json_data.get("Nazwisko"),
+        imie_ojca=json_data.get("ImieOjca"),
+        imie_matki=json_data.get("ImieMatki"),
+    ).parse_validate()
 
-#     adres_zamieszkania1 = AdresZamieszkania(
-#         kod_kraju=json_data.get("KodKraju"),
-#         wojewodztwo=json_data.get("Wojewodztwo"),
-#         powiat=json_data.get("Powiat"),
-#         gmina=json_data.get("Gmina"),
-#         miejscowosc=json_data.get("Miejscowosc"),
-#         ulica=json_data.get("Ulica"),
-#         nr_domu=json_data.get("NrDomu"),
-#         nr_lokalu=json_data.get("NrLokalu"),
-#         kod_pocztowy=json_data.get("KodPocztowy"),
-#     ).parse_validate()
+    adres_zamieszkania1 = AdresZamieszkania(
+        kod_kraju=json_data.get("KodKraju"),
+        wojewodztwo=json_data.get("Wojewodztwo"),
+        powiat=json_data.get("Powiat"),
+        gmina=json_data.get("Gmina"),
+        miejscowosc=json_data.get("Miejscowosc"),
+        ulica=json_data.get("Ulica"),
+        nr_domu=json_data.get("NrDomu"),
+        nr_lokalu=json_data.get("NrLokalu"),
+        kod_pocztowy=json_data.get("KodPocztowy"),
+    ).parse_validate()
 
-#     osoba_fizyczna2 = OsobaFizyczna(
-#         pesel=json_data.get("Pesel2"),
-#         imie=json_data.get("Imie2"),
-#         nazwisko=json_data.get("Nazwisko2"),
-#         imie_ojca=json_data.get("ImieOjca2"),
-#         imie_matki=json_data.get("ImieMatki2"),
-#     ).parse_validate()
+    osoba_fizyczna2 = OsobaFizyczna(
+        pesel=json_data.get("Pesel2"),
+        imie=json_data.get("Imie2"),
+        nazwisko=json_data.get("Nazwisko2"),
+        imie_ojca=json_data.get("ImieOjca2"),
+        imie_matki=json_data.get("ImieMatki2"),
+    ).parse_validate()
 
-#     adres_zamieszkania2 = AdresZamieszkania(
-#         kod_kraju=json_data.get("KodKraju2"),
-#         wojewodztwo=json_data.get("Wojewodztwo2"),
-#         powiat=json_data.get("Powiat2"),
-#         gmina=json_data.get("Gmina2"),
-#         miejscowosc=json_data.get("Miejscowosc2"),
-#         ulica=json_data.get("Ulica2"),
-#         nr_domu=json_data.get("NrDomu2"),
-#         nr_lokalu=json_data.get("NrLokalu2"),
-#         kod_pocztowy=json_data.get("KodPocztowy2"),
-#     ).parse_validate()
+    adres_zamieszkania2 = AdresZamieszkania(
+        kod_kraju=json_data.get("KodKraju2"),
+        wojewodztwo=json_data.get("Wojewodztwo2"),
+        powiat=json_data.get("Powiat2"),
+        gmina=json_data.get("Gmina2"),
+        miejscowosc=json_data.get("Miejscowosc2"),
+        ulica=json_data.get("Ulica2"),
+        nr_domu=json_data.get("NrDomu2"),
+        nr_lokalu=json_data.get("NrLokalu2"),
+        kod_pocztowy=json_data.get("KodPocztowy2"),
+    ).parse_validate()
 
-# sdz_schema = SDZ2_6_Schema(
+    sdz2_schema = SDZ2_6_Schema(
+        P_4=json_data.get("P_4"),
+        P_40=json_data.get("P_40"),
+        P_45=json_data.get("P_45"),
+        P_46=json_data.get("P_46"),
+        P_47=json_data.get("P_47"),
+        P_48=json_data.get("P_48"),
+        P_49=json_data.get("P_49"),
+        P_50=json_data.get("P_50"),
+        P_51=json_data.get("P_51"),
+        P_52=json_data.get("P_52"),
+        P_80=json_data.get("P_80"),
+        P_81=json_data.get("P_81"),
+        P_82=json_data.get("P_82"),
+        P_87=json_data.get("P_87"),
+        P_88=json_data.get("P_88"),
+        P_89=json_data.get("P_89"),
+        P_90=json_data.get("P_90"),
+        P_91=json_data.get("P_91"),
+        P_92=json_data.get("P_92"),
+        declaration_date=json_data.get("DataZlozeniaDeklaracji"),
+        transaction_date=json_data.get("P_4"),
+        osoba_fizyczna_1=osoba_fizyczna1,
+        osoba_fizyczna_2=osoba_fizyczna2,
+        adres_zamieszkania_1=adres_zamieszkania1,
+        adres_zamieszkania_2=adres_zamieszkania2,
+        kod_urzedu=json_data.get("KodUrzedu"),
+    ).parse_validate()
+
+    out = {}
+
+    for key in sdz2_schema:
+        out[key] = sdz2_schema[key]
+
+    for key in osoba_fizyczna1:
+        out[key] = osoba_fizyczna1[key]
+
+    for key in osoba_fizyczna2:
+        out[key] = osoba_fizyczna2[key]
+
+    for key in adres_zamieszkania1:
+        out[key] = adres_zamieszkania1[key]
+
+    for key in adres_zamieszkania2:
+        out[key] = adres_zamieszkania2[key]
+
+    return out
+
+
 
 
 def generate_xml(json_schema):

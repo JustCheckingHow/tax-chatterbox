@@ -3,6 +3,9 @@
     border: .125rem solid #fafafa;;
     padding: 12px;
     transition: .3s;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     &:hover{
       border-color: #0052a5;
       cursor: pointer;

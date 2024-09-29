@@ -137,3 +137,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ASGI_APPLICATION = "taxchatter.asgi.application"
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 CORS_ALLOW_ALL_ORIGINS = True
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
