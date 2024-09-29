@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -18,8 +18,10 @@ import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.ts
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
 import { useLanguage } from '../../context/languageContext';
 import Form from '../../components/Form/Form';
-import DOMPurify from 'dompurify';
-import { marked } from 'marked';
+// // @ts-ignore
+// import DOMPurify from 'dompurify';
+// // @ts-ignore
+// import { marked } from 'marked';
 
 interface Message {
   message: string;
@@ -41,15 +43,16 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   }
 
   const renderMessage = (text: string) => {
-    const rawHtml = marked(text);
-    const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+    // const rawHtml = marked(text);
+    // // @ts-ignore
+    // const sanitizedHtml = DOMPurify.sanitize(rawHtml);
     return (
       <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
         {senderName != '' && <div className={styles.chat__message__author}>
           {senderName === 'AI' && <img src={logo} alt="logo" />}
         </div>}
         <div className={styles.chat__message__content}>
-          <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+          <div dangerouslySetInnerHTML={{ __html: text }} />
         </div>
       </li>
     );
@@ -76,6 +79,15 @@ const Chat: React.FC = () => {
   const [formType, setFormType] = useState<string | null>(null);
   const [formName, setFormName] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const { language } = useLanguage();
 
