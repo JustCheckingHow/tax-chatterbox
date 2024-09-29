@@ -19,7 +19,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8001:8000"
+      - "8000:8000"
     env_file:
       - .env
     environment:
@@ -35,6 +35,8 @@ services:
   
   certbot:
     image: certbot/certbot
+    depends_on:
+      - nginx 
     volumes:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
