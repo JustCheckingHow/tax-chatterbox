@@ -38,7 +38,7 @@ function GovermentSelect(props: GovermentSelectProps) {
                 props.generateXml();
             }}
             
-            ><span>Zatwierdź swój urząd</span></button>
+            ><span>Wygeneruj XML</span></button>
 
         </div>
     )

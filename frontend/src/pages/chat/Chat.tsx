@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
@@ -16,6 +17,7 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
+import { useLanguage } from '../../context/languageContext.ts';
 
 
 interface Message {
@@ -23,7 +25,6 @@ interface Message {
   sender: 'user' | 'ai' | 'system';
   hidden?: boolean;
 }
-
 
 const Message: React.FC<Message> = ({ message, sender, hidden }) => {
   if (hidden) {
@@ -38,13 +39,27 @@ const Message: React.FC<Message> = ({ message, sender, hidden }) => {
     senderName = '';
   }
 
+  const renderMessage = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, index) => 
+      urlRegex.test(part) ? (
+        <a key={index} href={part} target="_blank" rel="noopener noreferrer">
+          {part}
+        </a>
+      ) : (
+        part
+      )
+    );
+  };
+
   return (
     <li className={styles.chat__message + " " + (sender === 'user' ? styles.chat__message__user : (sender === 'ai' ? styles.chat__message__ai : styles.chat__message__system))}>
       {senderName != '' && <div className={styles.chat__message__author}>
         {senderName === 'AI' && <img src={logo} alt="logo" />}
-      </div> }
+      </div>}
       <div className={styles.chat__message__content}>
-        {message}
+        {renderMessage(message)}
       </div>
     </li>
   )
@@ -55,7 +70,6 @@ const Chat: React.FC = () => {
   const [newestMessage, setNewestMessage] = useState<Message | null>(null);
   const [isNecessary, setIsNecessary] = useState<boolean | "unknown">("unknown");
   const [view, setView] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [requiredInfo, setRequiredInfo] = useState<any>([]);
   const [validatedInfo, setValidatedInfo] = useState<any>(false);
   const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
@@ -63,6 +77,8 @@ const Chat: React.FC = () => {
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { language } = useLanguage();
   
   useEffect(() => {
     try {
@@ -78,16 +94,7 @@ const Chat: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    setValidatedInfo(true);
-    requiredInfo.forEach((info: string) => {
-      if (!obtainedInfo[info]) {
-        setValidatedInfo(false);
-      }
-    })
-  }, [requiredInfo]);
-
-  useEffect(() => {
-    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy) {
+    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == '') {
       fetch(`${import.meta.env.VITE_BACKEND_URL}/api/closestUrzad`, {
         method: 'POST',
         headers: {
@@ -103,18 +110,29 @@ const Chat: React.FC = () => {
           setAllUrzedy(data.all_urzedy);
         })
     }
-    if(validatedInfo) {
+    else {
+      setClosestUrzad([]);
+      setAllUrzedy([]);
+    }
+    let isValid = true;
+    requiredInfo.forEach((info: string) => {
+      if (!obtainedInfo[info] || obtainedInfo[info] === '') {
+        isValid = false;
+      }
+    });
+    setValidatedInfo(isValid);
+
+    if (validatedInfo) {
       generateXml();
     }
-  }, [validatedInfo, obtainedInfo]);
-
+  }, [requiredInfo, obtainedInfo]);
 
   const [input, setInput] = useState('');
-  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat?lang=pl');
+  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
 
   const handleSendMessage = () => {
     if (input.trim()) {
-      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo, obtained_info: obtainedInfo, history: messages, is_necessary: isNecessary }));
+      sendMessage(JSON.stringify({ command: 'basicFlow', text: input, required_info: requiredInfo, obtained_info: obtainedInfo, history: messages, is_necessary: isNecessary, language: language }));
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
@@ -182,7 +200,7 @@ const Chat: React.FC = () => {
           a.style.display = 'none';
           a.href = url;
           a.download = 'formularz.xml';
-          document.body.appendChild(a);
+          setXmlFile(url);
         })
     } catch (error) {
       console.error(error);
@@ -256,9 +274,9 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
-        {!validatedInfo && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
-      {xmlFile && <FinalDocument xmlFile={xmlFile} />}
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+        {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+        {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
       <Footer />
     </Box>

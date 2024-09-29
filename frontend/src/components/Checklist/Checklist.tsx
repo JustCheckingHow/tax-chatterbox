@@ -4,9 +4,11 @@ import styles from "./Checklist.module.scss";
 interface ChecklistProps {
     required_info: { [key: string]: { description: string, required: boolean, label: string, pattern: string, type: string } }[];
     obtained_info: { [key: string]: any };
+    setObtainedInfo: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>;
 }
 
-const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info }) => {
+
+const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info, setObtainedInfo }) => {
     return (
         <aside className={styles.checklist__aside}>
             <h3>Skompletowane dane</h3>
@@ -16,14 +18,16 @@ const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info }) =
                     const name = Object.keys(value)[0];
                     const val = obtained_info[name];
                     const isChecked = val !== undefined;
+                    const type = value.type ? value.type : "text";
                     return (
                         <li key={index} className={isChecked ? styles.checked : ""}>
-                            <div className="label">{label}</div>
-                            <input type={typeof value.type === 'string' ? value.type : "text"} value={val} />
+                            <div className={styles.label + " label"}>{label}</div>
+                            <input type={type} value={val} onChange={(e) => {
+                                setObtainedInfo((prev) => ({ ...prev, [name]: e.target.value }));
+                            }} />
                         </li>
                     );
-                }
-                )}
+                })}
             </ul>
         </aside>
     );
