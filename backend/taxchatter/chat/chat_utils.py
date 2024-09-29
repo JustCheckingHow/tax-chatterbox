@@ -220,8 +220,8 @@ async def recognize_question(message, history, language_setting="pl"):
 
     user = (
         "Oto historia wiadomości: " + "\n".join([f"- {msg['role']}: {msg['content']}" for msg in history]) + ". "  # noqa: E501
-        "Użytkownik pyta o coś związanego z podatkami, opisuje sytuację, wita się, czy pyta o coś niezwiązanego? \n"
-        "Odpisz tylko jednym słowem: 'pytanie', 'sytuacja', 'powitanie', 'inne'."
+        "Użytkownik pyta o coś związanego z podatkami, wgrał dokument, opisuje sytuację, wita się, czy pyta o coś niezwiązanego? \n"
+        "Odpisz tylko jednym słowem: 'pytanie', 'dokument', 'sytuacja', 'powitanie', 'inne'."
     )
 
     res = await _get_ai_response(

@@ -17,3 +17,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend

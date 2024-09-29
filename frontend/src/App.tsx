@@ -3,6 +3,7 @@ import "./assets/styles/global.scss"
 import Chat from './pages/chat'
 import Admin from './pages/admin/Admin'  // Add this import
 import { LanguageProvider } from './context/languageProvider'
+import MobileUpload from './pages/mobileUpload/mobileUpload'
 
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
       <>
         <Route path="/" element={<Chat />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/mobileUpload/:id" element={<MobileUpload />} />
         <Route path="/admin" element={<Admin />} />
       </>
     )

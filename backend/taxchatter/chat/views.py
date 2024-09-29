@@ -1,6 +1,8 @@
+import base64
 import os
 import tempfile
 from datetime import timedelta
+import uuid
 
 from django.db.models import Count
 from django.db.models.functions import TruncHour
@@ -11,6 +13,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .address_verification import GMAPS, all_urzedy, get_closest_urzad
+from .llm_prompts.qwen import ocr_pdf, submit_image, get_ocr_chat_messages
 from .address_verification import (
     GMAPS,
     all_urzedy,
@@ -21,6 +25,8 @@ from .llm_prompts.qwen import ocr_pdf
 from .models import Conversation, Intent, Message
 from .xml_generator import PCC3_6_Schema, Sdz2_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
 
+import qrcode
+from io import BytesIO
 
 def chat_page(request):
     return render(request, "chat/chat.html")
@@ -61,13 +67,17 @@ class ChatAPIView(APIView):
 
 class FileUploadView(APIView):
     def post(self, request):
+        logger.info(f"Received file upload request: {request.FILES}")
         file = request.FILES["file"]
         # Here you can process the file
         # save the file to the server
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             for chunk in file.chunks():
                 temp_file.write(chunk)
-            responses = ocr_pdf(temp_file.name)
+            try:
+                responses = ocr_pdf(temp_file.name)
+            except Exception as e:
+                responses = submit_image(temp_file.name, img_msg=get_ocr_chat_messages)
 
             return Response(
                 {"message": "File uploaded successfully", "responses": responses}
@@ -204,7 +214,7 @@ class AdminConversationsView(APIView):
 
             # Query for conversations in the last 24 hours
             conversations = Conversation.objects.filter(created_at__gte=day_ago)
-            
+
             # Query for intents in the last 24 hours, join with Message
             intents = Intent.objects.filter(
                 message__conversation__in=conversations
@@ -268,3 +278,32 @@ class AdminConversationsView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class InitializeConversationView(APIView):
+    def get(self, request):
+        multidevice_idx = uuid.uuid4()
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(f"http://10.250.160.94:3000/mobileUpload/{multidevice_idx}")
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill="black", back_color="white").get_image()
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        base64_qr = base64.b64encode(img_byte_arr.getvalue()).decode("utf-8")
+
+        return Response(
+            {
+                "message": "Conversation initialized successfully",
+                "multidevice_idx": multidevice_idx,
+                "url": f"http://10.250.160.94:3000/mobileUpload/{multidevice_idx}",
+                "qr": base64_qr,
+            },
+            status=status.HTTP_200_OK,
+        )

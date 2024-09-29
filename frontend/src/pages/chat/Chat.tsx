@@ -80,8 +80,21 @@ const Chat: React.FC = () => {
   const [conversationKey, setConversationKey] = useState<string | null>(null);
   const [requiredInfoLength, setRequiredInfoLength] = useState<number>(0);
   const [progress, setProgress] = useState<number>(0);
+  const [multideviceIdx, setMultideviceIdx] = useState<string | null>(null);
+  const [mobileImage, setMobileImage] = useState<string | null>(null);
+
+  const [qrCode, setQrCode] = useState<any>(null);
 
   const { language } = useLanguage();
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/initialize_conversation`)
+      .then(response => response.json())
+      .then(data => {
+        setMultideviceIdx(data.multidevice_idx);
+        setQrCode(data.qr);
+      })
+  }, []);
 
   useEffect(() => {
     try {
@@ -143,7 +156,7 @@ const Chat: React.FC = () => {
   }, [obtainedInfo]);
 
   const [input, setInput] = useState('');
-  const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
+  const { lastMessage, sendMessage } = useChatterWS(`ws/v1/chat/${multideviceIdx}`);
 
   const handleSendMessage = () => {
     if (input.trim()) {
@@ -214,53 +227,126 @@ const Chat: React.FC = () => {
       else if (lastMessageData.command === 'connect') {
         setConversationKey(lastMessageData.messageId);
       }
+      else if (lastMessageData.command === 'mobileMessage') {
+        console.log("Setting mobile image");
+        setMobileImage(lastMessageData.fileBase64);
+      }
     }
   }, [lastMessage]);
 
-  const updateUrzad = (kod: string) => {
-    setObtainedInfo(info => ({ ...info, UrzadSkarbowy: kod }));
-  }
 
-  const generateXml = () => {
-    try {
-      fetch(`${import.meta.env.VITE_BACKEND_URL}/api/generate_xml`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: obtainedInfo
-        })
-      }).then(response => response.blob())
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = 'formularz.xml';
-          // setXmlFile(url);
-        })
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  useEffect(() => {
+    if (mobileImage) {
+      setIsLoading(true);
+      console.log("Uploading mobile image");
+      const formData = new FormData();
 
-  return (
-    <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
-      <Nav />
-      <div className={'container ' + styles.container__lg} style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
-        <div className={styles.chat__progress}>
-          <div 
-            className={styles.chat__progress__item} 
-            style={{width: `${(progress / requiredInfoLength) * 100}%`}}
-          >
-            
-          </div>
-          <span className={styles.chat__progress__item__text}>
-          {((progress / requiredInfoLength) * 100).toFixed(2)}%
-          </span>
+      // Convert base64 string to Blob
+      console.log(mobileImage.slice(0, 100));
+      const byteCharacters = atob(mobileImage.split(',')[1]);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+      // Create File object from Blob
+      const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+      formData.append('file', file);
+
+      try {
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/upload`, {
+          method: 'POST',
+          body: formData,
+        })
+        .then(response => {
+          if (response.ok) {
+          console.log('Files uploaded');
+          response.json().then(data => {
+            if (data.responses) {
+              if (!Array.isArray(data.responses)) {
+                data.responses = [data.responses];
+              }
+            }
+            if (data.responses && Array.isArray(data.responses)) {
+              console.log(data.responses);
+              const message = {
+                command: 'basicFlow',
+                text: "Oto treść umowy którą podpisałem. ```" + data.responses.join(' ') + "```",
+                required_info: requiredInfo,
+                history: [],
+                is_necessary: "unknown",
+                conversation_key: conversationKey,
+                language: language,
+                obtained_info: obtainedInfo,
+              };
+              sendMessage(JSON.stringify(message));
+            }
+            setProgress(100);
+          });
+        } else {
+          console.error('Upload failed');
+          setProgress(0);
+          }
+        })
+        .catch(error => {
+          console.error('Upload error:', error);
+          setProgress(0);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  }, [mobileImage]);
+
+const updateUrzad = (kod: string) => {
+  setObtainedInfo(info => ({ ...info, UrzadSkarbowy: kod }));
+}
+
+const generateXml = () => {
+  try {
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/generate_xml`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        data: obtainedInfo
+      })
+    }).then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'formularz.xml';
+        // setXmlFile(url);
+      })
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+return (
+  <Box sx={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
+    <Nav />
+    <div className={'container ' + styles.container__lg} style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
+      <div className={styles.chat__progress}>
+        <div
+          className={styles.chat__progress__item}
+          style={{ width: `${(progress / requiredInfoLength) * 100}%` }}
+        >
+
         </div>
-        <div className={styles.chat__wrapper}>
+        <span className={styles.chat__progress__item__text}>
+          {((progress / requiredInfoLength) * 100).toFixed(2)}%
+        </span>
+      </div>
+      <div className={styles.chat__wrapper}>
         <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
         <div className={styles.chat__container}>
           {messages.length < 2 && (view != "uploadDoc" ? (
@@ -278,6 +364,7 @@ const Chat: React.FC = () => {
                 icon={voiceIcon}
                 heading={"Wgraj umowę z telefonu"}
                 content={"Zrób zdjęcie umowy i wgraj je tutaj."}
+                qr={qrCode}
               />
               <GridItem
                 onClick={() => { }}
@@ -333,18 +420,18 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
-        </div>
-        </div>
-      <div className="container" style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
-      
-        <Form required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
-
-        {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
-        {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
-      <Footer />
-    </Box>
-  );
+    </div>
+    <div className="container" style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
+
+      <Form required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+
+      {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+      {xmlFile && <FinalDocument xmlFile={xmlFile} />}
+    </div>
+    <Footer />
+  </Box>
+);
 };
 
 export default Chat;

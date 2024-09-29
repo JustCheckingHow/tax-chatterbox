@@ -18,15 +18,18 @@ UNNECESSARY_QUESTIONS = [
     "Wojewodztwo",
     "KodKraju",
     "KodPocztowy",
-    "UrzadSkarbowy"
+    "UrzadSkarbowy",
 ]
+
 
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.accept()
+        self.multidevice_idx = self.scope["url_route"]["kwargs"]["multidevice_idx"]
 
-        # conversation = await database_sync_to_async(Conversation.objects.create)()
-        # await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
+        # add to group
+        await self.channel_layer.group_add("multidevice", self.channel_name)
+
+        await self.accept()
 
     async def disconnect(self, close_code):
         # if conversation is empty, delete it
@@ -36,9 +39,13 @@ class AIConsumer(AsyncWebsocketConsumer):
         messages_parsed = []
         for msg in messages:
             if msg["sender"] == "user":
-                messages_parsed.append({"role": "user", "content": msg["message"].replace("\n", " ")})
+                messages_parsed.append(
+                    {"role": "user", "content": msg["message"].replace("\n", " ")}
+                )
             elif msg["sender"] == "ai":
-                messages_parsed.append({"role": "assistant", "content": msg["message"].replace("\n", " ")})
+                messages_parsed.append(
+                    {"role": "assistant", "content": msg["message"].replace("\n", " ")}
+                )
         return messages_parsed
 
     async def send_on_the_fly(
@@ -57,7 +64,9 @@ class AIConsumer(AsyncWebsocketConsumer):
                 message,
                 history,
                 callback=lambda x: self.send(
-                    text_data=json.dumps({"message": x, "command": command, "history": history})
+                    text_data=json.dumps(
+                        {"message": x, "command": command, "history": history}
+                    )
                 ),
                 language_setting=language_setting,
             )
@@ -68,15 +77,40 @@ class AIConsumer(AsyncWebsocketConsumer):
                 required_info,
                 obtained_info,
                 callback=lambda x: self.send(
-                    text_data=json.dumps({"message": x, "command": command, "history": history})
+                    text_data=json.dumps(
+                        {"message": x, "command": command, "history": history}
+                    )
                 ),
                 language_setting=language_setting,
             )
-        await self.send(text_data=json.dumps({"message": res, "command": final_command, "history": history}))
+        await self.send(
+            text_data=json.dumps(
+                {"message": res, "command": final_command, "history": history}
+            )
+        )
+
+    async def mobile_message(self, event):
+        message = event["message"]
+        await self.send(text_data=json.dumps(message))
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        logger.info(f"Received message: {text_data_json}")
+
+        msg_type = text_data_json.get("type", None)
+        if msg_type == "mobileMessage":
+            # send to group
+            await self.channel_layer.group_send(
+                "multidevice",
+                {
+                    "type": "mobile_message",
+                    "message": {
+                        "message": text_data_json["message"],
+                        "command": "mobileMessage",
+                        "fileBase64": text_data_json["fileBase64"],
+                    },
+                },
+            )
+            return
 
         message = text_data_json["text"]
         required_info = text_data_json["required_info"]
@@ -85,22 +119,35 @@ class AIConsumer(AsyncWebsocketConsumer):
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
         conversation_key = text_data_json["conversation_key"]
-        
+
         for element in required_info:
             if list(element.keys())[0] in UNNECESSARY_QUESTIONS:
                 required_info.remove(element)
 
         if conversation_key is None:
             conversation = await database_sync_to_async(Conversation.objects.create)()
-            await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "messageId": str(conversation.conversation_key),
+                        "command": "connect",
+                    }
+                )
+            )
         else:
-            conversation = await database_sync_to_async(Conversation.objects.get)(conversation_key=conversation_key)
+            conversation = await database_sync_to_async(Conversation.objects.get)(
+                conversation_key=conversation_key
+            )
 
-        message_obj = Message(conversation=conversation, content=message, is_user_message=True)
+        message_obj = Message(
+            conversation=conversation, content=message, is_user_message=True
+        )
         await database_sync_to_async(message_obj.save)()
         messages_parsed = self.parse_messages_history(messages)
 
-        intent = await chat_utils.recognize_question(message, messages_parsed, language_setting=LANG_MAP[language])
+        intent = await chat_utils.recognize_question(
+            message, messages_parsed, language_setting=LANG_MAP[language]
+        )
         logger.info(f"Intent: {intent}")
 
         intent_obj = Intent(intent=intent, message=message_obj)
@@ -135,15 +182,25 @@ class AIConsumer(AsyncWebsocketConsumer):
             language_setting=LANG_MAP[language],
         )
         # Remove unchanged values
-        answer = {k: v for k, v in answer.items() if str(v).strip() != str(obtained_info.get(k, None)).strip()}
+        answer = {
+            k: v
+            for k, v in answer.items()
+            if str(v).strip() != str(obtained_info.get(k, None)).strip()
+        }
         obtained_info.update(answer)
-        await self.send(text_data=json.dumps({"message": answer, "command": "informationParsed"}))
+        await self.send(
+            text_data=json.dumps({"message": answer, "command": "informationParsed"})
+        )
 
         # Check whether the form is even necessary
-        answer = await chat_utils.verify_if_necessary(message, messages_parsed, language_setting=LANG_MAP[language])
+        answer = await chat_utils.verify_if_necessary(
+            message, messages_parsed, language_setting=LANG_MAP[language]
+        )
         if is_necessary == "unknown" or answer == "nie wiem":
             logger.info(f"AI response: {answer}")
-            await self.send(text_data=json.dumps({"message": answer, "command": "isNecessary"}))
+            await self.send(
+                text_data=json.dumps({"message": answer, "command": "isNecessary"})
+            )
 
             await self.send_on_the_fly(
                 chat_utils.question_if_necessary,
