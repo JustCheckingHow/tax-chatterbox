@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
-=======
-import React, { useContext, useEffect, useState } from 'react';
->>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -21,11 +17,7 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
-<<<<<<< HEAD
 import { useLanguage } from '../../context/languageContext.ts';
-=======
-import LangContext from '../../context/LangContext.tsx';
->>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
 
 
 interface Message {
@@ -85,12 +77,8 @@ const Chat: React.FC = () => {
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-<<<<<<< HEAD
 
   const { language } = useLanguage();
-=======
-  const langContext = useContext(LangContext);
->>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
   
   useEffect(() => {
     try {
