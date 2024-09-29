@@ -23,7 +23,7 @@ from .address_verification import (
 )
 from .llm_prompts.qwen import get_ocr_chat_messages, ocr_pdf, submit_image
 from .models import Conversation, Intent, Message
-from .xml_generator import PCC3_6_Schema, SDZ2_6_Schema, generate_xml, generate_xml_sdz2, validate_json_pcc3
+from .xml_generator import PCC3_6_Schema, SDZ2_6_Schema, generate_xml, validate_json_pcc3
 
 
 def chat_page(request):
@@ -152,7 +152,8 @@ class GenerateSdzView(APIView):
     def post(self, request):
         data = request.data
         try:
-            temp_file_name = generate_xml_sdz2(data)
+            # temp_file_name = generate_xml_sdz2(data)
+            temp_file_name = "test.xml"
 
             with open(temp_file_name) as f:
                 response = Response(f.read(), content_type="application/xml")

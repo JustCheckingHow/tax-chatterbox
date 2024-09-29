@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import Nav from '../../components/Nav/Nav';
 import { useParams } from 'react-router-dom';
 import useWebSocket from 'react-use-websocket';
@@ -12,7 +11,7 @@ const MobileUpload: React.FC = () => {
 
   const { id } = useParams();
 
-  const { sendMessage, lastMessage } = useWebSocket(`http://10.250.160.94:8001/ws/v1/chat/${id}`);
+  const { sendMessage } = useWebSocket(`http://10.250.160.94:8001/ws/v1/chat/${id}`);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
