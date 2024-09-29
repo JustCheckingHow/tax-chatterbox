@@ -62,6 +62,7 @@ const Chat: React.FC = () => {
   const [closestUrzad, setClosestUrzad] = useState<Array<any>>([]);
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
   const [xmlFile, setXmlFile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   useEffect(() => {
     try {
@@ -117,6 +118,7 @@ const Chat: React.FC = () => {
 
       setMessages([...messages, { message: input, sender: 'user' }]);
       setInput('');
+      setIsLoading(true);
       // Here you would typically send the message to your backend
     }
   };
@@ -128,9 +130,11 @@ const Chat: React.FC = () => {
       if (lastMessageData.command === 'basicFlowComplete') {
         setMessages(m => [...m, { message: lastMessageData.message, sender: 'ai' }]);
         setNewestMessage(null);
+        setIsLoading(false);
       }
       else if (lastMessageData.command === 'basicFlowPartial') {
         setNewestMessage({ message: lastMessageData.message, sender: 'ai' });
+        setIsLoading(false);
       }
       else if (lastMessageData.command === 'informationParsed') {
         const newestInfo = lastMessageData.message as Record<string, string>;
@@ -204,7 +208,7 @@ const Chat: React.FC = () => {
                 onClick={() => { }}
                 icon={voiceIcon}
                 heading={"Porozmawiaj z asystentem"}
-                content={"System na bazie umowy sam uzupełni formularz w przypadku braku informacji dopyta Ciebie."}
+                content={"Porozmawiaj z asystentem i opisz mu swoją sytuację. JustCheckingTax Ci pomoże."}
               />
             </div>
           ) : <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -231,6 +235,7 @@ const Chat: React.FC = () => {
                 <Message {...message} />
               </React.Fragment>
             ))}
+            {isLoading && <LoadingAnimation />}
             {newestMessage && <Message {...newestMessage} />}
           </ul>
           <form className={styles.chat__form}>
@@ -261,3 +266,14 @@ const Chat: React.FC = () => {
 };
 
 export default Chat;
+
+
+const LoadingAnimation: React.FC = () => {
+  return (
+    <div className={styles.loading__animation}>
+      <div className={styles.loading__animation__dot}></div>
+      <div className={styles.loading__animation__dot}></div>
+      <div className={styles.loading__animation__dot}></div>
+    </div>
+  );
+};
