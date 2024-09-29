@@ -164,6 +164,24 @@ class AdresZamieszkania:
     def get_schema():
         return [
             {
+                "KodPocztowy": {
+                    "description": "Kod pocztowy",
+                    "label": "Kod pocztowy",
+                    "required": True,
+                    "type": "string",
+                    "pattern": "^[0-9]{2}-[0-9]{3}$",
+                }
+            },
+            {
+                "Miejscowosc": {
+                    "description": "Miejscowość",
+                    "label": "Miejscowość",
+                    "required": True,
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{1,30}$",
+                }
+            },
+            {
                 "KodKraju": {
                     "description": "Kod kraju",
                     "label": "Kod kraju",
@@ -200,15 +218,6 @@ class AdresZamieszkania:
                 }
             },
             {
-                "Miejscowosc": {
-                    "description": "Miejscowość",
-                    "label": "Miejscowość",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[A-Za-z]{1,30}$",
-                }
-            },
-            {
                 "Ulica": {
                     "description": "Ulica",
                     "label": "Ulica",
@@ -233,15 +242,6 @@ class AdresZamieszkania:
                     "required": True,
                     "type": "string",
                     "pattern": "^[0-9]{1,10}$",
-                }
-            },
-            {
-                "KodPocztowy": {
-                    "description": "Kod pocztowy",
-                    "label": "Kod pocztowy",
-                    "required": True,
-                    "type": "string",
-                    "pattern": "^[0-9]{2}-[0-9]{3}$",
                 }
             },
         ]
