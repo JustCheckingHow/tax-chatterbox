@@ -1340,7 +1340,7 @@ def generate_xml(json_schema):
         wersjaSchemy="1-0E",
     )
     kod_formularza.text = "PCC-3"
-    for f in ("27", "46", "53"):
+    if parsed_json.get("stawka_podatku") is not None and parsed_json.get("P_26") is not None:
         # P_26 -- podstawa opodatkowania
         parsed_json[f"P_{f}"] = round(parsed_json.get("stawka_podatku") * parsed_json.get("P_26"), 0)
 
