@@ -1,9 +1,11 @@
 import json
 
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from loguru import logger
 
 from . import chat_utils
+from .models import Conversation, Intent, Message, Cost
 
 LANG_MAP = {
     "pl": "polsku",
@@ -11,12 +13,23 @@ LANG_MAP = {
     "en": "angielsku",
 }
 
+UNNECESSARY_QUESTIONS = [
+    "Powiat",
+    "Wojewodztwo",
+    "KodKraju",
+    "KodPocztowy",
+    "UrzadSkarbowy"
+]
 
 class AIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
 
+        # conversation = await database_sync_to_async(Conversation.objects.create)()
+        # await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
+
     async def disconnect(self, close_code):
+        # if conversation is empty, delete it
         pass
 
     def parse_messages_history(self, messages):
@@ -38,7 +51,6 @@ class AIConsumer(AsyncWebsocketConsumer):
         required_info=None,
         obtained_info=None,
         language_setting="pl",
-        accumulator=0,
     ):
         if required_info is None:
             res, cost = await method(
@@ -82,6 +94,20 @@ class AIConsumer(AsyncWebsocketConsumer):
         messages = text_data_json["history"]
         is_necessary = text_data_json["is_necessary"]
         language = text_data_json["language"]
+        conversation_key = text_data_json["conversation_key"]
+        
+        for element in required_info:
+            if list(element.keys())[0] in UNNECESSARY_QUESTIONS:
+                required_info.remove(element)
+
+        if conversation_key is None:
+            conversation = await database_sync_to_async(Conversation.objects.create)()
+            await self.send(text_data=json.dumps({"messageId": str(conversation.conversation_key), "command": "connect"}))
+        else:
+            conversation = await database_sync_to_async(Conversation.objects.get)(conversation_key=conversation_key)
+
+        message_obj = Message(conversation=conversation, content=message, is_user_message=True)
+        await database_sync_to_async(message_obj.save)()
         messages_parsed = self.parse_messages_history(messages)
 
         intent, cost = await chat_utils.recognize_question(
@@ -89,6 +115,10 @@ class AIConsumer(AsyncWebsocketConsumer):
         )
         loop_cost += cost
         logger.info(f"Intent: {intent}")
+
+        intent_obj = Intent(intent=intent, message=message_obj)
+        await database_sync_to_async(intent_obj.save)()
+
         if intent == "inne":
             loop_cost += await self.send_on_the_fly(
                 chat_utils.refuse_to_answer,
@@ -98,6 +128,8 @@ class AIConsumer(AsyncWebsocketConsumer):
                 "basicFlowComplete",
                 language_setting=LANG_MAP[language],
             )
+            cost_obj = Cost(conversation=conversation, cost=loop_cost)
+            await database_sync_to_async(cost_obj.save)()
             return
         elif intent == "pytanie":
             loop_cost += await self.send_on_the_fly(
@@ -108,6 +140,8 @@ class AIConsumer(AsyncWebsocketConsumer):
                 "basicFlowComplete",
                 language_setting=LANG_MAP[language],
             )
+            cost_obj = Cost(conversation=conversation, cost=loop_cost)
+            await database_sync_to_async(cost_obj.save)()
             return
 
         # Extract information from user message and prompt them for missing info
@@ -140,6 +174,8 @@ class AIConsumer(AsyncWebsocketConsumer):
                 "basicFlowComplete",
                 language_setting=LANG_MAP[language],
             )
+            cost_obj = Cost(conversation=conversation, cost=loop_cost)
+            await database_sync_to_async(cost_obj.save)()
             return
 
         # If we know that the form is not necessary, tell user why
@@ -152,6 +188,8 @@ class AIConsumer(AsyncWebsocketConsumer):
                 "basicFlowComplete",
                 language_setting=LANG_MAP[language],
             )
+            cost_obj = Cost(conversation=conversation, cost=loop_cost)
+            await database_sync_to_async(cost_obj.save)()
             return
 
         # Check what tax rate should be applied in the case
@@ -181,3 +219,5 @@ class AIConsumer(AsyncWebsocketConsumer):
             obtained_info=obtained_info,
             language_setting=LANG_MAP[language],
         )
+        cost_obj = Cost(conversation=conversation, cost=loop_cost)
+        await database_sync_to_async(cost_obj.save)()

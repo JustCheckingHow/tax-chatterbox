@@ -1,17 +1,21 @@
 
-.checklist{
+.form{
     &__aside{
         padding: 12px;
         border: .125em solid #f1f1f1;
-        margin-top: 24px;
     }
     &__ul{
         padding: 0;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         grid-gap: 24px;
+        @media (max-width: 655px){
+            grid-template-columns: 1fr 1fr;
+        }
+        @media (max-width: 435px){
+            grid-template-columns: 1fr;
+        }
         li{
-            
             font-size: 18px;
             list-style: none;
             display: flex;

@@ -3,23 +3,24 @@
     &__aside{
         padding: 12px;
         border: .125em solid #f1f1f1;
-        margin-top: 24px;
+        width: 240px;
+        @media (max-width: 745px){
+            width: 100%;
+        }
     }
     &__ul{
         padding: 0;
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        grid-gap: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
         li{
             
             font-size: 18px;
             list-style: none;
             display: flex;
-            align-items: center;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
             
-            .label{
                 padding-left: 30px;
                 position: relative;
                 &::before, &::after{
@@ -38,10 +39,9 @@
                 &::before{
                     transform: translate(-50%, -50%) rotate(-45deg);
                 }
-            }
+            
 
             &.checked{
-                .label{
                     &::before, &::after{
                         background-color: #598527;
                         width: 15px;
@@ -51,7 +51,7 @@
                         top: calc(50% + 4px);
                         transform: translate(calc(-50% - 8px), -50%) rotate(45deg);
                     }
-                }
+                
             }
         }
     }

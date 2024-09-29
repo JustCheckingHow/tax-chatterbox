@@ -10,7 +10,6 @@ import GridItem from "../../components/GridItem/GridItem.tsx";
 import ChatDocUploader from "../../components/ChatDocUploader/ChatDocUploader.tsx";
 
 import signIcon from "../../assets/icons/sign.svg";
-// import chatIcon from "../../assets/icons/czatbot.svg";
 import voiceIcon from "../../assets/icons/callcenter.svg";
 
 import logo from "../../assets/image/logo.png"
@@ -79,6 +78,8 @@ const Chat: React.FC = () => {
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [conversationKey, setConversationKey] = useState<string | null>(null);
+  const [requiredInfoLength, setRequiredInfoLength] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0);
 
   const { language } = useLanguage();
 
@@ -89,6 +90,13 @@ const Chat: React.FC = () => {
         .then(response => response.json())
         .then(data => {
           setRequiredInfo(data.message);
+          let requiredInfoLength = 0;
+          data.message.forEach((info: any) => {
+            if (info.required) {
+              requiredInfoLength++;
+            }
+          });
+          setRequiredInfoLength(requiredInfoLength);
         })
     } catch (error) {
       console.error(error);
@@ -117,11 +125,16 @@ const Chat: React.FC = () => {
       setAllUrzedy([]);
     }
     let isValid = true;
+    let progress = 0;
     requiredInfo.forEach((info: string) => {
       if ((!obtainedInfo[info] || obtainedInfo[info] === '')) {
         isValid = false;
       }
+      else {
+        progress++;
+      }
     });
+    setProgress(progress);
     setValidatedInfo(isValid);
 
     if (validatedInfo) {
@@ -227,12 +240,15 @@ const Chat: React.FC = () => {
         <div className={styles.chat__progress}>
           <div 
             className={styles.chat__progress__item} 
-            style={{width: `${(requiredInfo.length / (1))}%`}}
+            style={{width: `${(progress / requiredInfoLength) * 100}%`}}
           >
-            {(requiredInfo.length / (1))}%
+            
           </div>
+          <span className={styles.chat__progress__item__text}>
+          {((progress / requiredInfoLength) * 100).toFixed(2)}%
+          </span>
         </div>
-        <div>
+        <div className={styles.chat__wrapper}>
         <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
         <div className={styles.chat__container}>
           {messages.length < 2 && (view != "uploadDoc" ? (
@@ -302,7 +318,8 @@ const Chat: React.FC = () => {
         </div>
         </div>
       <div className="container" style={{ paddingTop: "2em", paddingBottom: "2em", flex: 1 }}>
-      <Form required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+      
+        <Form required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
 
         {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
         {xmlFile && <FinalDocument xmlFile={xmlFile} />}

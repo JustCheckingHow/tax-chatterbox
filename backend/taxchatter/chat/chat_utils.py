@@ -67,8 +67,8 @@ async def get_ai_response(message, history, required_info, obtained_info, callba
         + ". "
         "Oto informacje, które użytkownik już podał: " + str(obtained_info) + ". "
     )
-    system += "Zadawaj jedno pytanie na raz."
-
+    system += "Zadawaj max 3 pytania na raz. Grupuj je tematycznie, np imiona rodziców, dane osobowe, dane adresowe itp."
+    
     user = message
     return await _get_ai_response(
         [

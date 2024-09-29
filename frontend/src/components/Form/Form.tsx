@@ -1,39 +1,72 @@
 import React from 'react';
 import styles from "./Form.module.scss";
 
-interface ChecklistProps {
-    required_info: { [key: string]: { description: string, required: boolean, label: string, pattern: string, type: string } }[];
-    obtained_info: { [key: string]: any };
-    setObtainedInfo: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>;
+interface FieldInfo {
+  description: string;
+  label: string;
+  required: boolean;
+  type: string;
+  pattern?: string;
+  visible?: boolean;
 }
 
+interface Section {
+  label: string;
+  content: { [key: string]: FieldInfo }[];
+}
 
-const Form: React.FC<ChecklistProps> = ({ required_info, obtained_info, setObtainedInfo }) => {
+interface formProps {
+  required_info: { section: Section }[];
+  obtained_info: { [key: string]: any };
+  setObtainedInfo: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>;
+}
+
+const Form: React.FC<formProps> = ({ required_info, obtained_info, setObtainedInfo }) => {
+  const renderField = (name: string, field: FieldInfo) => {
+    if (field.visible === false) return null;
+
+    const val = obtained_info[name] || '';
+    const isChecked = val !== '';
+    const type = field.type !== "string" ? field.type : "text";
 
     return (
-        <aside className={styles.checklist__aside}>
-            <h3>Skompletowane dane</h3>
-            <ul className={styles.checklist__ul}>
-
-                {Object.entries(required_info).map(([_, value], index) => {
-                    const label = Object.values(value)[0].label;
-                    const name = Object.keys(value)[0];
-                    const val = obtained_info[name];
-                    const isChecked = val !== undefined;
-                    let isRequired = Object.values(value)[0].required;
-                    const type = Object.values(value)[0].type != "string" ? Object.values(value)[0].type : "text";
-                    return (
-                        <li key={index} className={isChecked ? styles.checked : ""}>
-                            <div className={(isRequired ? styles.label : "") + " label"}>{label}</div>
-                            <input type={type} value={val} onChange={(e) => {
-                                setObtainedInfo((prev) => ({ ...prev, [name]: e.target.value }));
-                            }} />
-                        </li>
-                    );
-                })}
-            </ul>
-        </aside>
+      <li key={name} className={isChecked ? styles.checked : ""}>
+        <div className={`${field.required ? styles.required : ""} ${styles.label}`}>{field.label}</div>
+        <input
+          type={type}
+          value={val}
+          onChange={(e) => setObtainedInfo((prev) => ({ ...prev, [name]: e.target.value }))}
+          required={field.required}
+          pattern={field.pattern}
+        />
+      </li>
     );
+  };
+
+  if (!required_info || !Array.isArray(required_info)) {
+    return <div>Error: Invalid required_info data</div>;
+  }
+
+  return (
+    <aside className={styles.form__aside}>
+      <h3>Skompletowane dane</h3>
+      {required_info.map((item, index) => {
+        if (!item.section) return null;
+        const { label, content } = item.section;
+        return (
+          <div key={index} id={label}>
+            <h4>{label}</h4>
+            <ul className={styles.form__ul}>
+              {content.map((fieldObj) => {
+                const [name, field] = Object.entries(fieldObj)[0];
+                return renderField(name, field);
+              })}
+            </ul>
+          </div>
+        );
+      })}
+    </aside>
+  );
 };
 
 export default Form;

@@ -9,19 +9,27 @@ interface ChecklistProps {
 const Checklist: React.FC<ChecklistProps> = ({ required_info, obtained_info }) => {
     return (
         <aside className={styles.checklist__aside}>
-            <h3>Skompletowane dane</h3>
+            <h3>Dane</h3>
             <ul className={styles.checklist__ul}>
 
                 {Object.entries(required_info).map(([_, value], index) => {
                     const label = Object.values(value)[0].label;
                     const name = Object.keys(value)[0];
                     const val = obtained_info[name];
-                    const isChecked = val !== undefined;
-                    let isRequired = Object.values(value)[0].required;
+                    
+                    let isChecked = true;
+
+                    Object.values(value)[0].content.forEach((item) => {
+                        const itemName = Object.keys(item)[0];
+                        const itemVal = obtained_info[itemName];
+                        if (itemVal === '' || itemVal === undefined) {
+                            isChecked = false;
+                        }
+                    });
+
                     return (
                         <li key={index} className={isChecked ? styles.checked : ""}>
-                            <div className={(isRequired ? styles.label : "") + " label"}>{label}</div>
-                            {label}
+                            <a href={"#" + label}>{label}</a>
                         </li>
                     );
                 })}
