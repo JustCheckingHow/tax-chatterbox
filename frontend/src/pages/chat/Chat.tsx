@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
+=======
+import React, { useContext, useEffect, useState } from 'react';
+>>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
 import { Box } from '@mui/material';
 import useChatterWS from '../../hooks/useChatterWS';
 import Nav from '../../components/Nav/Nav';
@@ -17,7 +21,11 @@ import logo from "../../assets/image/logo.png"
 import Checklist from "../../components/Checklist/Checklist.tsx"
 import GovermentSelect from "../../components/GovermentSelect/GovermentSelect.tsx"
 import FinalDocument from "../../components/FinalDocument/FinalDocument.tsx"
+<<<<<<< HEAD
 import { useLanguage } from '../../context/languageContext.ts';
+=======
+import LangContext from '../../context/LangContext.tsx';
+>>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
 
 
 interface Message {
@@ -77,8 +85,12 @@ const Chat: React.FC = () => {
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
   const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+<<<<<<< HEAD
 
   const { language } = useLanguage();
+=======
+  const langContext = useContext(LangContext);
+>>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
   
   useEffect(() => {
     try {
@@ -94,16 +106,7 @@ const Chat: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    setValidatedInfo(true);
-    requiredInfo.forEach((info: string) => {
-      if (!obtainedInfo[info]) {
-        setValidatedInfo(false);
-      }
-    })
-  }, [requiredInfo]);
-
-  useEffect(() => {
-    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy) {
+    if (obtainedInfo.Ulica && obtainedInfo.NrDomu && obtainedInfo.Miejscowosc && obtainedInfo.KodPocztowy && obtainedInfo.UrzadSkarbowy == '') {
       fetch(`${import.meta.env.VITE_BACKEND_URL}/api/closestUrzad`, {
         method: 'POST',
         headers: {
@@ -119,11 +122,22 @@ const Chat: React.FC = () => {
           setAllUrzedy(data.all_urzedy);
         })
     }
+    else {
+      setClosestUrzad([]);
+      setAllUrzedy([]);
+    }
+    let isValid = true;
+    requiredInfo.forEach((info: string) => {
+      if (!obtainedInfo[info] || obtainedInfo[info] === '') {
+        isValid = false;
+      }
+    });
+    setValidatedInfo(isValid);
+
     if (validatedInfo) {
       generateXml();
     }
-  }, [validatedInfo, obtainedInfo]);
-
+  }, [requiredInfo, obtainedInfo]);
 
   const [input, setInput] = useState('');
   const { lastMessage, sendMessage } = useChatterWS('ws/v1/chat');
@@ -198,7 +212,7 @@ const Chat: React.FC = () => {
           a.style.display = 'none';
           a.href = url;
           a.download = 'formularz.xml';
-          document.body.appendChild(a);
+          setXmlFile(url);
         })
     } catch (error) {
       console.error(error);
@@ -272,8 +286,13 @@ const Chat: React.FC = () => {
             </button>
           </form>
         </div>
+<<<<<<< HEAD
         <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
         {!validatedInfo && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+=======
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+        {allUrzedy && <GovermentSelect closestUrzad={closestUrzad} updateUrzad={updateUrzad} allUrzedy={allUrzedy} generateXml={generateXml} />}
+>>>>>>> f1b8a04b6eeb74944081a6965d3eb78f26f56a05
         {xmlFile && <FinalDocument xmlFile={xmlFile} />}
       </div>
       <Footer />
