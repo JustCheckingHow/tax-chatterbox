@@ -160,7 +160,6 @@ class AIConsumer(AsyncWebsocketConsumer):
                     }
                 )
             )
-        # # Send message to AI consumer
         # Send message to AI consumer
         await self.send_on_the_fly(
             chat_utils.get_ai_response,
