@@ -3,9 +3,6 @@ import styles from "./Nav.module.scss";
 import logo from "../../assets/image/logo.png"
 import { Link } from 'react-router-dom';
 
-import chatIcon from "../../assets/icons/czatbot.svg";
-import knowledgeIcon from "../../assets/icons/bazawiedzy.svg";
-import homeIcon from "../../assets/icons/home.svg";
 import { Language, useLanguage } from '../../context/languageContext';
 
 const Nav: React.FC = () => {

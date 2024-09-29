@@ -76,7 +76,7 @@ const Chat: React.FC = () => {
   const [obtainedInfo, setObtainedInfo] = useState<Record<string, string>>({});
   const [closestUrzad, setClosestUrzad] = useState<Array<any>>([]);
   const [allUrzedy, setAllUrzedy] = useState<Array<any>>([]);
-  const [xmlFile, setXmlFile] = useState<any>(null);
+  const [xmlFile, _] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [conversationKey, setConversationKey] = useState<string | null>(null);
 
@@ -227,13 +227,13 @@ const Chat: React.FC = () => {
         <div className={styles.chat__progress}>
           <div 
             className={styles.chat__progress__item} 
-            style={{width: `${(requiredInfo.length / (obtainedInfo.length || 1))}%`}}
+            style={{width: `${(requiredInfo.length / (1))}%`}}
           >
-            {(requiredInfo.length / (obtainedInfo.length || 1))}%
+            {(requiredInfo.length / (1))}%
           </div>
         </div>
         <div>
-        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} setObtainedInfo={setObtainedInfo} />
+        <Checklist required_info={requiredInfo} obtained_info={obtainedInfo} />
         <div className={styles.chat__container}>
           {messages.length < 2 && (view != "uploadDoc" ? (
             <div

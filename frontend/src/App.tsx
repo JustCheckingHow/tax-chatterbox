@@ -1,5 +1,4 @@
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
-import Main from './pages/main'
 import "./assets/styles/global.scss"
 import Chat from './pages/chat'
 // import Admin from './pages/admin/Admin'  // Add this import
