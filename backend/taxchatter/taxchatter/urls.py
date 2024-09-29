@@ -29,5 +29,6 @@ urlpatterns = [
     path("api/generate_xml", chat_views.GenerateXmlView.as_view(), name="generate_xml"),
     path("api/closestUrzad", chat_views.LocationView.as_view(), name="closest_urzad"),
     path("api/initialize_conversation", chat_views.InitializeConversationView.as_view(), name="initialize_conversation"),
+    path("api/validate_infer", chat_views.ValidateAndInferView.as_view(), name="validate_infer"),
     path("api/admin/conversations", AdminConversationsView.as_view(), name="admin-conversations"),
 ]
